@@ -61,8 +61,8 @@ class Person(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, size):
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self):
+        super().__init__()
         self.hp = 1
 
 
