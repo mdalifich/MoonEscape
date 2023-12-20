@@ -29,18 +29,36 @@ def load_image(name, colorkey=None):
     return image
 
 
+class Barrier(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.x, self.y = x, y
+        self.DiedX = -200
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
+        self.x, self.y = 350, 600
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def Die(self):
+        self.close()
+
+    def Moving(self):
+        self.x -= 1
+
+
 class Person(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.hp = 5
-        self.weapon_cell = 0
+        self.weapon = 0
         self.is_jump = True
         self.is_fly = False
-        self.image = load_image('person1.png', (255, 255, 255))
-        self.rect = self.image.get_rect()
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
+        self.x, self.y = 350, 600
 
     def draw(self):
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, (self.x, self.y))
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -57,6 +75,7 @@ if __name__ == '__main__':
 
     all_sprites = pygame.sprite.Group()
     person = Person()
+    barrier = Barrier(1024, 600)
     running = True
     while running:
         for event in pygame.event.get():
@@ -65,6 +84,8 @@ if __name__ == '__main__':
 
         screen.fill((255, 255, 255))
         person.draw()
+        barrier.draw()
+        barrier.Moving()
         pygame.display.flip()
 
     pygame.quit()
