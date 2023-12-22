@@ -34,7 +34,7 @@ class Barrier(pygame.sprite.Sprite):
         super().__init__()
         self.x, self.y = x, y
         self.DiedX = -200
-        self.image = load_image('Icons/person1.png', (255, 255, 255))
+        self.image = load_image('Icons/ExitIcon.png', (255, 255, 255))
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -43,8 +43,9 @@ class Barrier(pygame.sprite.Sprite):
         self.close()
 
     def Moving(self):
-        self.x -= 1
+        self.x -= 10
         if self.x <= self.DiedX:
+            #self.Die()
             self.x = 1024
 
 
@@ -53,8 +54,6 @@ class Person(pygame.sprite.Sprite):
         super().__init__()
         self.hp = 5
         self.weapon = 0
-        self.is_jump = True
-        self.is_fly = False
         self.image = load_image('Icons/person1.png', (255, 255, 255))
         self.x, self.y = 350, 600
 
@@ -62,16 +61,65 @@ class Person(pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def jump(self):
-        self.y -= 5
+        if self.y == 600:
+            self.y -= 200
+        elif self.y >= 20:
+            self.y -= 10
 
     def fall(self):
-        self.y += 5
+        self.y += 10
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, type):
+        super().__init__()
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
+        self.typeBullet = type
+        self.isAlife = True
+        if self.typeBullet == 'Arrow':
+            self.speed = 20
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def Die(self):
+        self.close()
+
+    def Moving(self):
+        self.x -= self.speed
+        if self.x <= self.DiedX:
+            self.isAlife = False
+            self.Die()
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.hp = 1
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
+        self.isFire = False
+        self.x, self.y = 350, 600
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def Die(self):
+        self.close()
+
+    def Moving(self):
+        self.x -= 10
+        if self.x <= self.DiedX:
+            # self.Die()
+            self.x = 1024
+        if self.y - person.y <= 100:
+            if not isFire:
+                self.Fire()
+
+    def Fire(self):
+        self.bullet = Bullet('Arrow')
+        self.bullet.draw()
+        self.bullet.Moving()
+        self.isFire = self.isAlive
 
 
 if __name__ == '__main__':
@@ -85,6 +133,7 @@ if __name__ == '__main__':
     person = Person()
     FPS = 60
     barrier = Barrier(1024, 600)
+    enemy = Enemy()
     running = True
     fall = False
 
@@ -107,14 +156,16 @@ if __name__ == '__main__':
             if person.y < 600:
                 person.fall()
 
+        enemy.draw()
+        enemy.Moving()
         person.draw()
         pygame.display.flip()
         clock.tick(FPS)
 
     pygame.quit()
-
+s = '''
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Menu()
     ex.show()
-    sys.exit(app.exec())
+    sys.exit(app.exec())'''
