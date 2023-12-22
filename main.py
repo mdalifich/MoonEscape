@@ -40,13 +40,12 @@ class Barrier(pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def Die(self):
-        self.close()
+        del self
 
     def Moving(self):
         self.x -= 10
         if self.x <= self.DiedX:
-            #self.Die()
-            self.x = 1024
+            self.Die()
 
 
 class Person(pygame.sprite.Sprite):
@@ -71,11 +70,13 @@ class Person(pygame.sprite.Sprite):
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, type):
+    def __init__(self, typebul, x, y):
         super().__init__()
-        self.image = load_image('Icons/person1.png', (255, 255, 255))
-        self.typeBullet = type
-        self.isAlife = True
+        self.image = load_image(f'Icons/{typebul}.png', (255, 255, 255))
+        self.typeBullet = typebul
+        self.isAlive = True
+        self.DiedX = -200
+        self.x, self.y = x, y
         if self.typeBullet == 'Arrow':
             self.speed = 20
 
@@ -83,22 +84,20 @@ class Bullet(pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def Die(self):
-        self.close()
+        print('DIe')
 
     def Moving(self):
         self.x -= self.speed
-        if self.x <= self.DiedX:
-            self.isAlife = False
-            self.Die()
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.hp = 1
-        self.image = load_image('Icons/person1.png', (255, 255, 255))
-        self.isFire = False
         self.x, self.y = 350, 600
+        self.bullet = Bullet('Arrow', self.x, self.y)
+        self.DiedX = -200
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -111,15 +110,19 @@ class Enemy(pygame.sprite.Sprite):
         if self.x <= self.DiedX:
             # self.Die()
             self.x = 1024
-        if self.y - person.y <= 100:
-            if not isFire:
-                self.Fire()
+        if self.y - person.y == 0:
+            self.Fire()
+
 
     def Fire(self):
-        self.bullet = Bullet('Arrow')
-        self.bullet.draw()
+        if not self.bullet.isAlive:
+            self.bullet = Bullet('Arrow', self.x, self.y)
+            self.bullet.draw()
         self.bullet.Moving()
-        self.isFire = self.isAlive
+        if self.bullet.x <= self.bullet.DiedX:
+            self.bullet.Die()
+
+
 
 
 if __name__ == '__main__':
@@ -158,6 +161,8 @@ if __name__ == '__main__':
 
         enemy.draw()
         enemy.Moving()
+        enemy.bullet.draw()
+        enemy.bullet.Moving()
         person.draw()
         pygame.display.flip()
         clock.tick(FPS)
