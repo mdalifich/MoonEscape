@@ -34,7 +34,7 @@ class Barrier(pygame.sprite.Sprite):
         super().__init__()
         self.x, self.y = x, y
         self.DiedX = -200
-        self.image = load_image('person1.png', (255, 255, 255))
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -44,6 +44,8 @@ class Barrier(pygame.sprite.Sprite):
 
     def Moving(self):
         self.x -= 1
+        if self.x <= self.DiedX:
+            self.x = 1024
 
 
 class Person(pygame.sprite.Sprite):
@@ -53,11 +55,17 @@ class Person(pygame.sprite.Sprite):
         self.weapon = 0
         self.is_jump = True
         self.is_fly = False
-        self.image = load_image('person1.png', (255, 255, 255))
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
         self.x, self.y = 350, 600
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
+
+    def jump(self):
+        self.y -= 5
+
+    def fall(self):
+        self.y += 5
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -78,14 +86,27 @@ if __name__ == '__main__':
     FPS = 60
     barrier = Barrier(1024, 600)
     running = True
+    fall = False
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            key = pygame.key.get_pressed()
+            if key[pygame.K_SPACE]:
+                person.jump()
+            if True in key:
+                fall = False
+            else:
+                fall = True
 
         screen.fill((255, 255, 255))
         barrier.draw()
         barrier.Moving()
+        if fall:
+            if person.y < 600:
+                person.fall()
+
         person.draw()
         pygame.display.flip()
         clock.tick(FPS)
