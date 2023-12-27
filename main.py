@@ -155,14 +155,16 @@ if __name__ == '__main__':
         screen.fill((255, 255, 255))
         barrier.draw()
         barrier.Moving()
-        if fall:
+                if fall:
             if person.y < 600:
                 person.fall()
+                enemy = None
 
-        enemy.draw()
-        enemy.Moving()
-        enemy.bullet.draw()
-        enemy.bullet.Moving()
+        if enemy != None:
+            enemy.draw()
+            enemy.Moving()
+            enemy.bullet.draw()
+            enemy.bullet.Moving()
         person.draw()
         pygame.display.flip()
         clock.tick(FPS)
