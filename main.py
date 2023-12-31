@@ -29,7 +29,24 @@ def load_image(name, colorkey=None):
     return image
 
 
-class Barrier(pygame.sprite.Sprite):
+class Mov(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.x = 0
+        self.y = 0
+        self.DiedX = -200
+        self.speed = 10
+
+    def Die(self):
+        pass
+
+    def Moving(self):
+        self.x -= self.speed
+        if self.x <= self.DiedX:
+            self.Die()
+
+
+class Barrier(Mov, pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.x, self.y = x, y
@@ -40,12 +57,8 @@ class Barrier(pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def Die(self):
-        del self
-
-    def Moving(self):
-        self.x -= 10
-        if self.x <= self.DiedX:
-            self.Die()
+        global barrier
+        barrier = None
 
 
 class Person(pygame.sprite.Sprite):
@@ -69,9 +82,10 @@ class Person(pygame.sprite.Sprite):
         self.y += 10
 
 
-class Bullet(pygame.sprite.Sprite):
+class Bullet(Mov, pygame.sprite.Sprite):
     def __init__(self, typebul, x, y):
         super().__init__()
+        self.coef = -1
         self.image = load_image(f'Icons/{typebul}.png', (255, 255, 255))
         self.typeBullet = typebul
         self.isAlive = True
@@ -83,19 +97,22 @@ class Bullet(pygame.sprite.Sprite):
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
 
-    def Die(self):
-        print('DIe')
+    def Die(self, x, y):
+        self.x, self.y = x, y
+        self.coef = -1
 
     def Moving(self):
         self.x -= self.speed
+        self.y += self.coef
+        if self.y <= 575:
+            self.coef = 1
 
 
-class Enemy(pygame.sprite.Sprite):
+class Enemy(Mov, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.hp = 1
         self.x, self.y = 350, 600
-        self.bullet = Bullet('Arrow', self.x, self.y)
         self.DiedX = -200
         self.image = load_image('Icons/person1.png', (255, 255, 255))
 
@@ -103,24 +120,25 @@ class Enemy(pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def Die(self):
-        self.close()
+        global enemy
+        enemy = None
 
     def Moving(self):
-        self.x -= 10
+        self.x -= self.speed
         if self.x <= self.DiedX:
             # self.Die()
-            self.x = 1024
+            self.x = 1920
         if self.y - person.y == 0:
             self.Fire()
 
 
     def Fire(self):
-        if not self.bullet.isAlive:
-            self.bullet = Bullet('Arrow', self.x, self.y)
-            self.bullet.draw()
-        self.bullet.Moving()
-        if self.bullet.x <= self.bullet.DiedX:
-            self.bullet.Die()
+        global bul
+        if not bul.isAlive:
+            bul = Bullet('Arrow', self.x, self.y + 25)
+            bul.draw()
+        if bul.x <= bul.DiedX:
+            bul.Die(self.x, self.y + 25)
 
 
 
@@ -128,15 +146,16 @@ class Enemy(pygame.sprite.Sprite):
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Пам парам')
-    size = width, height = 1024, 768
+    size = width, height = 1920, 768
     screen = pygame.display.set_mode(size)
 
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
     person = Person()
     FPS = 60
-    barrier = Barrier(1024, 600)
+    barrier = Barrier(1920, 600)
     enemy = Enemy()
+    bul = Bullet('Arrow', -10, 550)
     running = True
     fall = False
 
@@ -147,22 +166,28 @@ if __name__ == '__main__':
             key = pygame.key.get_pressed()
             if key[pygame.K_SPACE]:
                 person.jump()
-            if True in key:
+            if True in key and key[pygame.K_SPACE]:
                 fall = False
             else:
                 fall = True
 
         screen.fill((255, 255, 255))
-        barrier.draw()
-        barrier.Moving()
+        if barrier is not None:
+            barrier.draw()
+            barrier.Moving()
+
         if fall:
             if person.y < 600:
                 person.fall()
 
-        enemy.draw()
-        enemy.Moving()
-        enemy.bullet.draw()
-        enemy.bullet.Moving()
+        if enemy is not None:
+            enemy.draw()
+            enemy.Moving()
+            bul.draw()
+            bul.Moving()
+            if enemy.x == person.x and person.y >= 550:
+                enemy.Die()
+
         person.draw()
         pygame.display.flip()
         clock.tick(FPS)
