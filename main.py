@@ -1,9 +1,10 @@
-from PyQt5 import QtGui, QtCore
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow
-import pygame
 import os
 import sys
+
+import pygame
+from PyQt5 import uic
+from PyQt5.QtWidgets import QMainWindow
 
 
 class Menu(QMainWindow):
@@ -131,16 +132,13 @@ class Enemy(Mov, pygame.sprite.Sprite):
         if self.y - person.y == 0:
             self.Fire()
 
-
     def Fire(self):
         global bul
         if not bul.isAlive:
             bul = Bullet('Arrow', self.x, self.y + 25)
             bul.draw()
         if bul.x <= bul.DiedX:
-            bul.Die(self.x, self.y + 25)
-
-
+            bul.Die(self.y + 25, self.x)
 
 
 if __name__ == '__main__':
