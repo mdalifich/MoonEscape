@@ -1,17 +1,5 @@
-from PyQt5 import uic
 import os
-import sys
-
 import pygame
-from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow
-
-
-class Menu(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        uic.loadUi('Windows/MenuWindow.ui', self)
-
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('', name)
@@ -191,9 +179,3 @@ if __name__ == '__main__':
         clock.tick(FPS)
 
     pygame.quit()
-s = '''
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Menu()
-    ex.show()
-    sys.exit(app.exec())'''
