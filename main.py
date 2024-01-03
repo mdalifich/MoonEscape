@@ -140,12 +140,13 @@ if __name__ == '__main__':
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
     person = Person()
-    FPS = 60
+    FPS = 45
     barrier = Barrier(1000, 300)
     enemy = Enemy()
     bul = Bullet('Arrow', -10, 250)
     running = True
-    fall = False
+    is_Jump = False
+    Jump_count = 10
 
     while running:
         for event in pygame.event.get():
@@ -153,20 +154,26 @@ if __name__ == '__main__':
                 running = False
             key = pygame.key.get_pressed()
             if key[pygame.K_SPACE]:
-                person.jump()
-            if True in key and key[pygame.K_SPACE]:
-                fall = False
+                is_Jump = True
+        
+        if is_Jump:
+            if Jump_count >= -10:
+                if Jump_count < 0:
+                    person.rect.y += (Jump_count ** 2) / 2
+                else:
+                    person.rect.y -= (Jump_count ** 2) / 2
+                Jump_count -= 1
             else:
-                fall = True
+                is_Jump = False
+                Jump_count = 10
+        if person.rect.y >= 262:
+            person.rect.y = 262
 
         screen.fill((255, 255, 255))
         if barrier is not None:
             barrier.draw()
             barrier.Moving()
 
-        #if fall:
-            ##if person.rect.y <= 300:
-                #person.fall()
 
         if all_sprites:
             all_sprites.update()
