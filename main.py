@@ -54,8 +54,8 @@ class Barrier(Mov, pygame.sprite.Sprite):
 class Person(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.animList = ['Icons/person1.jpeg', 'Icons/person2.jpeg', 'Icons/person3.jpeg', 'Icons/person4.jpeg',
-                         'Icons/person5.jpeg']
+        self.animList = ['Icons/person1.png', 'Icons/person2.png', 'Icons/person3.png', 'Icons/person4.png',
+                         'Icons/person5.png']
         self.hp = 5
         self.weapon = 0
         self.image = load_image(self.animList[0], (255, 255, 255))
@@ -111,7 +111,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
         super().__init__()
         self.hp = 1
         self.DiedX = -200
-        self.image = load_image('Icons/person1.jpeg', (255, 255, 255))
+        self.image = load_image('Icons/person1.png', (255, 255, 255))
         self.image = pygame.transform.scale(self.image, (45, 77))
         self.rect = self.image.get_rect(center=(1000, 300))
 
