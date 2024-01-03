@@ -2,6 +2,13 @@ import os
 import pygame
 import sys
 
+score = 0
+
+def draw_text(screen, text, x, y):
+    font = pygame.font.Font(None, 50)
+    text_surface = font.render(text, True, (255, 0, 0))
+    screen.blit(text_surface, (x, y))
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('', name)
     # если файл не существует, то выходим
@@ -183,9 +190,8 @@ if __name__ == '__main__':
             barrier.draw()
             barrier.Moving()
 
-        #if fall:
-            ##if person.rect.y <= 300:
-                #person.fall()
+        score += 1
+        draw_text(screen, f"Очки: {score}", 5, 10)
 
         if all_sprites:
             all_sprites.update()
