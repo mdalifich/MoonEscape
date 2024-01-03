@@ -1,5 +1,6 @@
 import os
 import pygame
+import sys
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('', name)
@@ -56,19 +57,21 @@ class Person(pygame.sprite.Sprite):
         self.hp = 5
         self.weapon = 0
         self.image = load_image('Icons/person1.png', (255, 255, 255))
-        self.x, self.y = 350, 300
+        self.image = pygame.transform.scale(self.image, (45, 77))
+        self.rect = self.image.get_rect(center=(300, 300))
+        self.mask = pygame.mask.from_surface(self.image)
 
     def draw(self):
-        screen.blit(self.image, (self.x, self.y))
+        screen.blit(self.image, (self.rect.x, self.rect.y))
 
     def jump(self):
-        if self.y == 300:
-            self.y -= 200
-        elif self.y >= 20:
-            self.y -= 10
+        if self.rect.y == 300:
+            self.rect.y -= 200
+        elif self.rect.y >= 20:
+            self.rect.y -= 10
 
     def fall(self):
-        self.y += 10
+        self.rect.y += 10
 
 
 class Bullet(Mov, pygame.sprite.Sprite):
@@ -100,23 +103,22 @@ class Enemy(Mov, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.hp = 1
-        self.x, self.y = 1000, 300
         self.DiedX = -200
         self.image = load_image('Icons/person1.png', (255, 255, 255))
-
-    def draw(self):
-        screen.blit(self.image, (self.x, self.y))
+        self.image = pygame.transform.scale(self.image, (45, 77))
+        self.rect = self.image.get_rect(center=(1000, 300))
 
     def Die(self):
-        global enemy
-        enemy = None
+        enemy.kill()
 
-    def Moving(self):
-        self.x -= self.speed
-        if self.x < self.DiedX:
-            self.x = 1000
-        if self.y - person.y == 0:
-            self.Fire()
+    def update(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        self.rect.x -= self.speed
+        if self.rect.x <= -200:
+            self.Die()
+        if pygame.sprite.collide_mask(self, person):
+            self.Die()
+            person.rect.x -= 100
 
     def Fire(self):
         global bul
@@ -162,17 +164,15 @@ if __name__ == '__main__':
             barrier.draw()
             barrier.Moving()
 
-        if fall:
-            if person.y < 300:
-                person.fall()
+        #if fall:
+            ##if person.rect.y <= 300:
+                #person.fall()
 
-        if enemy is not None:
-            enemy.draw()
-            enemy.Moving()
-            bul.draw()
-            bul.Moving()
-            if enemy.x == person.x and person.y >= 250:
-                enemy.Die()
+        if all_sprites:
+            all_sprites.update()
+        else:
+            enemy = Enemy()
+            all_sprites.add(enemy)
 
         person.draw()
         pygame.display.flip()
