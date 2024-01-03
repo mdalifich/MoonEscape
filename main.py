@@ -155,7 +155,7 @@ if __name__ == '__main__':
             key = pygame.key.get_pressed()
             if key[pygame.K_SPACE]:
                 is_Jump = True
-        
+
         if is_Jump:
             if Jump_count >= -10:
                 if Jump_count < 0:
