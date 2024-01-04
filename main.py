@@ -65,13 +65,13 @@ class Person(pygame.sprite.Sprite):
                          'Icons/person5.png']
         self.hp = 5
         self.weapon = 0
-        self.image = load_image(self.animList[0], (255, 255, 255))
+        self.image = load_image(self.animList[0])
         self.image = pygame.transform.scale(self.image, (45, 77))
         self.rect = self.image.get_rect(center=(300, 300))
         self.mask = pygame.mask.from_surface(self.image)
 
     def AnimationUpdate(self, i):
-        self.image = load_image(self.animList[i], (255, 255, 255))
+        self.image = load_image(self.animList[i])
         self.image = pygame.transform.scale(self.image, (45, 77))
 
 
@@ -92,7 +92,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
     def __init__(self, typebul, x, y):
         super().__init__()
         self.coef = -1
-        self.image = load_image(f'Icons/{typebul}.png', (255, 255, 255))
+        self.image = load_image(f'Icons/{typebul}.png')
         self.typeBullet = typebul
         self.isAlive = True
         self.DiedX = -50
@@ -118,7 +118,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
         super().__init__()
         self.hp = 1
         self.DiedX = -200
-        self.image = load_image('Icons/person1.png', (255, 255, 255))
+        self.image = load_image('Icons/person1.png')
         self.image = pygame.transform.scale(self.image, (45, 77))
         self.rect = self.image.get_rect(center=(1000, 300))
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
             barrier.draw()
             barrier.Moving()
 
-        score += 1
+
         draw_text(screen, f"Очки: {score}", 5, 10)
 
         if all_sprites:
@@ -199,6 +199,7 @@ if __name__ == '__main__':
             enemy = Enemy()
             all_sprites.add(enemy)
         if PlayerAnimCount > 40:
+            score += 1
             PlayerAnimCount = 0
         if PlayerAnimCount % 10 == 0:
             person.AnimationUpdate(PlayerAnimCount // 10)
