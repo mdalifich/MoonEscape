@@ -32,13 +32,13 @@ class Mov(pygame.sprite.Sprite):
         self.x = 0
         self.y = 0
         self.DiedX = -200
-        self.speed = 10
+        self.speed = 5
 
     def Die(self):
         pass
 
     def Moving(self):
-        self.x -= self.speed
+        self.x -= self.speed + score // 10
         if self.x <= self.DiedX:
             self.Die()
 
@@ -48,10 +48,11 @@ class Barrier(Mov, pygame.sprite.Sprite):
         super().__init__()
         self.x, self.y = x, y
         self.DiedX = -200
-        self.image = load_image('Icons/ExitIcon.png', (255, 255, 255))
+        self.image = load_image('Icons/Box1.png')
+        self.image = pygame.transform.scale(self.image, (100, 100))
 
     def draw(self):
-        screen.blit(self.image, (self.x, self.y))
+        screen.blit(self.image, (self.x, self.y - 63))
 
     def Die(self):
         global barrier
@@ -98,7 +99,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.DiedX = -50
         self.x, self.y = x, y
         if self.typeBullet == 'Arrow':
-            self.speed = 20
+            self.speed = 20 + score // 10
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -107,7 +108,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.coef = -1
 
     def Moving(self):
-        self.x -= self.speed
+        self.x -= self.speed + score // 10
         self.y += self.coef
         if self.y <= 275:
             self.coef = 1
@@ -127,12 +128,14 @@ class Enemy(Mov, pygame.sprite.Sprite):
 
     def update(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        self.rect.x -= self.speed
-        if self.rect.x <= -200:
+        self.rect.x -= self.speed + score // 10
+        if self.rect.x <= self.DiedX:
             self.Die()
         if pygame.sprite.collide_mask(self, person):
             self.Die()
             person.rect.x -= 100
+        if person.rect.y == self.rect.y:
+            self.Fire()
 
     def Fire(self):
         global bul
@@ -145,11 +148,30 @@ class Enemy(Mov, pygame.sprite.Sprite):
             bul.y = self.y
 
 
+class Background(Mov, pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.x, self.y = x, y
+        self.DiedX = -1000
+        self.image = load_image('Icons/BackGround.png')
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def Die(self):
+        self.x = 2000
+
+
+
 if __name__ == '__main__':
     pygame.init()
-    pygame.display.set_caption('Пам парам')
+    pygame.display.set_caption('Moon Escape')
     size = width, height = 1000, 400
     screen = pygame.display.set_mode(size)
+
+    bg1 = Background(0, 0)
+    bg2 = Background(1000, 0)
+    bg3 = Background(2000, 0)
 
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
@@ -185,11 +207,17 @@ if __name__ == '__main__':
         if person.rect.y >= 262:
             person.rect.y = 262
 
-        screen.fill((255, 255, 255))
+        screen.fill((0, 0, 0))
         if barrier is not None:
             barrier.draw()
             barrier.Moving()
 
+        bg1.draw()
+        bg2.draw()
+        bg3.draw()
+        bg1.Moving()
+        bg2.Moving()
+        bg3.Moving()
 
         draw_text(screen, f"Очки: {score}", 5, 10)
 
