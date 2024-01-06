@@ -1,6 +1,34 @@
 import os
 import pygame
 import sys
+import pygame_menu
+from pygame_menu import themes
+
+pygame.init()
+surface = pygame.display.set_mode((600, 400))
+
+def set_difficulty(value, difficulty):
+    print(value)
+    print(difficulty)
+
+def level_menu():
+    mainmenu._open(level)
+
+def start_game():
+    pass
+
+
+mainmenu = pygame_menu.Menu('Welcome', 600, 400, theme=themes.THEME_SOLARIZED)
+mainmenu.add.text_input('Name: ', default='Billy Herrington', maxchar=20)
+mainmenu.add.button('Играть', level_menu)
+mainmenu.add.button('Таблица лидеров')
+mainmenu.add.button('Выход', pygame_menu.events.EXIT)
+
+level = pygame_menu.Menu('Выбор сложности', 600, 400, theme=themes.THEME_BLUE)
+level.add.selector('Сложность :', [('Лёгкий', 1), ('Средний', 2), ('Сложный', 3), ('Нереальный', 4)], onchange=set_difficulty)
+level.add.button('Начать игру', start_game())
+
+mainmenu.mainloop(surface)
 
 score = 0
 
