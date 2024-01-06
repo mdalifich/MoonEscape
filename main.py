@@ -177,6 +177,14 @@ class Enemy(Mov, pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
     def Moving(self):
+        self.rect.x -= self.speed
+        if self.rect.x <= self.DiedX:
+            self.Die()
+        if pygame.sprite.collide_mask(self, person):
+            self.Die()
+            person.rect.x -= 100
+        if person.rect.y == self.rect.y:
+            self.Fire()
 
     def Fire(self):
         global bul
