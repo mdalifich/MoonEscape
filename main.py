@@ -4,14 +4,15 @@ import sys
 
 score = 0
 
-def draw_text(screen, text, x, y):
+
+def draw_text(wind, text, x, y):
     font = pygame.font.Font(None, 50)
     text_surface = font.render(text, True, (255, 0, 0))
-    screen.blit(text_surface, (x, y))
+    wind.blit(text_surface, (x, y))
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('', name)
-    # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -38,28 +39,44 @@ class Mov(pygame.sprite.Sprite):
         pass
 
     def Moving(self):
-        self.x -= self.speed + score // 10
+        self.x -= self.speed
         if self.x <= self.DiedX:
             self.Die()
 
 
-class Barrier(Mov, pygame.sprite.Sprite):
-    def __init__(self, x, y):
+class Animated(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.animList = ['Icons/Box1.png']
+        self.image = None
+        self.scale = (50, 50)
+
+    def AnimationUpdate(self, i):
+        self.image = load_image(self.animList[i])
+        self.image = pygame.transform.scale(self.image, self.scale)
+
+
+class Barrier(Animated, Mov, pygame.sprite.Sprite):
+    def __init__(self, x, y, tp):
         super().__init__()
         self.x, self.y = x, y
+        self.type = tp
         self.DiedX = -200
-        self.image = load_image('Icons/Box1.png')
-        self.image = pygame.transform.scale(self.image, (100, 100))
+        self.image = load_image(self.type[0])
+        self.count = 0
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y - 63))
+        if self.count > len(self.animList) * 10:
+            self.count = 0
+        if self.count % 10 == 0:
+            self.AnimationUpdate(self.count // 10)
 
     def Die(self):
-        global barrier
-        barrier = None
+        barrier.kill()
 
 
-class Person(pygame.sprite.Sprite):
+class Person(Animated, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.animList = ['Icons/person1.png', 'Icons/person2.png', 'Icons/person3.png', 'Icons/person4.png',
@@ -67,13 +84,10 @@ class Person(pygame.sprite.Sprite):
         self.hp = 5
         self.weapon = 0
         self.image = load_image(self.animList[0])
-        self.image = pygame.transform.scale(self.image, (45, 77))
-        self.rect = self.image.get_rect(center=(300, 300))
+        self.image = pygame.transform.scale(self.image, (42, 64))
+        self.rect = self.image.get_rect(center=(300, 305))
         self.mask = pygame.mask.from_surface(self.image)
-
-    def AnimationUpdate(self, i):
-        self.image = load_image(self.animList[i])
-        self.image = pygame.transform.scale(self.image, (45, 77))
+        self.scale = (42, 64)
 
 
     def draw(self):
@@ -99,7 +113,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.DiedX = -50
         self.x, self.y = x, y
         if self.typeBullet == 'Arrow':
-            self.speed = 20 + score // 10
+            self.speed = 20
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -119,16 +133,16 @@ class Enemy(Mov, pygame.sprite.Sprite):
         super().__init__()
         self.hp = 1
         self.DiedX = -200
-        self.image = load_image('Icons/person1.png')
-        self.image = pygame.transform.scale(self.image, (45, 77))
-        self.rect = self.image.get_rect(center=(1000, 300))
+        self.image = load_image('Icons/enemy.png')
+        self.image = pygame.transform.scale(self.image, (42, 64))
+        self.rect = self.image.get_rect(center=(1000, 305))
 
     def Die(self):
         enemy.kill()
 
     def update(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        self.rect.x -= self.speed + score // 10
+        self.rect.x -= self.speed
         if self.rect.x <= self.DiedX:
             self.Die()
         if pygame.sprite.collide_mask(self, person):
@@ -162,6 +176,25 @@ class Background(Mov, pygame.sprite.Sprite):
         self.x = 2000
 
 
+class BB(Mov, pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.x, self.y = x, y
+        self.speed = 1
+        self.DiedX = -1000
+        self.image = load_image('Icons/BBackground.png')
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def Die(self):
+        self.x = 2000
+
+    def Moving(self):
+        self.x -= self.speed
+        if self.x <= self.DiedX:
+            self.Die()
+
 
 if __name__ == '__main__':
     pygame.init()
@@ -172,12 +205,15 @@ if __name__ == '__main__':
     bg1 = Background(0, 0)
     bg2 = Background(1000, 0)
     bg3 = Background(2000, 0)
+    bb1 = BB(0, 63)
+    bb2 = BB(1000, 63)
+    bb3 = BB(2000, 63)
 
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
     person = Person()
     FPS = 60
-    barrier = Barrier(1000, 300)
+    barrier = Barrier(1000, 300, ['Icons/Box1.png'])
     enemy = Enemy()
     bul = Bullet('Arrow', -10, 250)
     running = True
@@ -195,6 +231,8 @@ if __name__ == '__main__':
                 is_Jump = True
 
         if is_Jump:
+            person.image = load_image('Icons/personJump.png')
+            person.image = pygame.transform.scale(person.image, (50, 64))
             if Jump_count >= -10:
                 if Jump_count < 0:
                     person.rect.y += (Jump_count ** 2) / 2
@@ -204,20 +242,32 @@ if __name__ == '__main__':
             else:
                 is_Jump = False
                 Jump_count = 10
-        if person.rect.y >= 262:
-            person.rect.y = 262
+        else:
+            if PlayerAnimCount > 40:
+                score += 1
+                PlayerAnimCount = 0
+            if PlayerAnimCount % 10 == 0:
+                person.AnimationUpdate(PlayerAnimCount // 10)
+            PlayerAnimCount += 1
 
-        screen.fill((0, 0, 0))
-        if barrier is not None:
-            barrier.draw()
-            barrier.Moving()
-
+        if person.rect.y >= 274:
+            person.rect.y = 274
         bg1.draw()
         bg2.draw()
         bg3.draw()
         bg1.Moving()
         bg2.Moving()
         bg3.Moving()
+
+        bb1.draw()
+        bb2.draw()
+        bb3.draw()
+        bb1.Moving()
+        bb2.Moving()
+        bb3.Moving()
+
+        barrier.draw()
+        barrier.Moving()
 
         draw_text(screen, f"Очки: {score}", 5, 10)
 
@@ -226,12 +276,6 @@ if __name__ == '__main__':
         else:
             enemy = Enemy()
             all_sprites.add(enemy)
-        if PlayerAnimCount > 40:
-            score += 1
-            PlayerAnimCount = 0
-        if PlayerAnimCount % 10 == 0:
-            person.AnimationUpdate(PlayerAnimCount // 10)
-        PlayerAnimCount += 1
         person.draw()
         pygame.display.flip()
         clock.tick(FPS)
