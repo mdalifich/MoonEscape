@@ -61,7 +61,7 @@ class Mov(pygame.sprite.Sprite):
         self.x = 0
         self.y = 0
         self.DiedX = -200
-        self.speed = 5
+        self.speed = 10
 
     def Die(self):
         pass
@@ -98,7 +98,8 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
         if self.count > len(self.animList) * 10:
             self.count = 0
         if self.count % 10 == 0:
-            self.AnimationUpdate(self.count // 10)
+            self.AnimationUpdate(self.count // 10 - 1)
+        self.count += 1
 
     def Die(self):
         barrier.kill()
@@ -134,7 +135,7 @@ class Person(Animated, pygame.sprite.Sprite):
 class Bullet(Mov, pygame.sprite.Sprite):
     def __init__(self, typebul, x, y):
         super().__init__()
-        self.coef = -1
+        self.coef = -6
         self.image = load_image(f'Icons/{typebul}.png')
         self.typeBullet = typebul
         self.isAlive = True
@@ -147,13 +148,16 @@ class Bullet(Mov, pygame.sprite.Sprite):
         screen.blit(self.image, (self.x, self.y))
 
     def Die(self):
-        self.coef = -1
+        self.coef = -6
+        self.x = enemy.rect.x
+        self.y = enemy.rect.y + 20
 
     def Moving(self):
-        self.x -= self.speed + score // 10
+        self.x -= self.speed
         self.y += self.coef
-        if self.y <= 275:
-            self.coef = 1
+        self.coef += 0.25
+        if self.x <= self.DiedX:
+            self.Die()
 
 
 class Enemy(Mov, pygame.sprite.Sprite):
@@ -166,18 +170,13 @@ class Enemy(Mov, pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(1000, 305))
 
     def Die(self):
-        enemy.kill()
+        #enemy.kill()
+        self.rect.x = 1000
 
-    def update(self):
+    def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        self.rect.x -= self.speed
-        if self.rect.x <= self.DiedX:
-            self.Die()
-        if pygame.sprite.collide_mask(self, person):
-            self.Die()
-            person.rect.x -= 100
-        if person.rect.y == self.rect.y:
-            self.Fire()
+
+    def Moving(self):
 
     def Fire(self):
         global bul
@@ -278,8 +277,9 @@ if __name__ == '__main__':
                 person.AnimationUpdate(PlayerAnimCount // 10)
             PlayerAnimCount += 1
 
-        if person.rect.y >= 274:
-            person.rect.y = 274
+        if person.rect.y >= 273:
+            person.rect.y = 273
+            
         bg1.draw()
         bg2.draw()
         bg3.draw()
@@ -297,14 +297,16 @@ if __name__ == '__main__':
         barrier.draw()
         barrier.Moving()
 
+        bul.draw()
+        bul.Moving()
+
         draw_text(screen, f"Очки: {score}", 5, 10)
 
-        if all_sprites:
-            all_sprites.update()
-        else:
-            enemy = Enemy()
-            all_sprites.add(enemy)
+        enemy.draw()
+        enemy.Moving()
+
         person.draw()
+        
         pygame.display.flip()
         clock.tick(FPS)
 
