@@ -4,34 +4,6 @@ import sys
 import pygame_menu
 from pygame_menu import themes
 
-pygame.init()
-surface = pygame.display.set_mode((600, 400))
-
-def set_difficulty(value, difficulty):
-    print(value)
-    print(difficulty)
-
-def level_menu():
-    mainmenu._open(level)
-
-def start_game():
-    pass
-
-
-mainmenu = pygame_menu.Menu('Welcome', 600, 400, theme=themes.THEME_SOLARIZED)
-mainmenu.add.text_input('Name: ', default='Billy Herrington', maxchar=20)
-mainmenu.add.button('Играть', level_menu)
-mainmenu.add.button('Таблица лидеров')
-mainmenu.add.button('Выход', pygame_menu.events.EXIT)
-
-level = pygame_menu.Menu('Выбор сложности', 600, 400, theme=themes.THEME_BLUE)
-level.add.selector('Сложность :', [('Лёгкий', 1), ('Средний', 2), ('Сложный', 3), ('Нереальный', 4)], onchange=set_difficulty)
-level.add.button('Начать игру', start_game())
-
-mainmenu.mainloop(surface)
-
-score = 0
-
 
 def draw_text(wind, text, x, y):
     font = pygame.font.Font(None, 50)
@@ -118,7 +90,6 @@ class Person(Animated, pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.scale = (42, 64)
 
-
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
@@ -170,7 +141,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(1000, 305))
 
     def Die(self):
-        #enemy.kill()
+        # enemy.kill()
         self.rect.x = 1000
 
     def draw(self):
@@ -230,92 +201,125 @@ class BB(Mov, pygame.sprite.Sprite):
         if self.x <= self.DiedX:
             self.Die()
 
+pygame.init()
+surface = pygame.display.set_mode((600, 400))
 
-if __name__ == '__main__':
-    pygame.init()
-    pygame.display.set_caption('Moon Escape')
-    size = width, height = 1000, 400
-    screen = pygame.display.set_mode(size)
+screen = None
+bg1 = Background(0, 0)
+bg2 = Background(1000, 0)
+bg3 = Background(2000, 0)
+bb1 = BB(0, 63)
+bb2 = BB(1000, 63)
+bb3 = BB(2000, 63)
+all_sprites = pygame.sprite.Group()
+clock = pygame.time.Clock()
+person = Person()
+FPS = 60
+barrier = Barrier(1000, 300, ['Icons/Box1.png'])
+enemy = Enemy()
+bul = Bullet('Arrow', -10, 250)
+running = True
+fall = False
+PlayerAnimCount = 0
+is_Jump = False
+Jump_count = 10
+score = 0
 
-    bg1 = Background(0, 0)
-    bg2 = Background(1000, 0)
-    bg3 = Background(2000, 0)
-    bb1 = BB(0, 63)
-    bb2 = BB(1000, 63)
-    bb3 = BB(2000, 63)
 
-    all_sprites = pygame.sprite.Group()
-    clock = pygame.time.Clock()
-    person = Person()
-    FPS = 60
-    barrier = Barrier(1000, 300, ['Icons/Box1.png'])
-    enemy = Enemy()
-    bul = Bullet('Arrow', -10, 250)
-    running = True
-    fall = False
-    PlayerAnimCount = 0
-    is_Jump = False
-    Jump_count = 10
+def set_difficulty(value, difficulty):
+    print(value)
+    print(difficulty)
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            key = pygame.key.get_pressed()
-            if key[pygame.K_SPACE]:
-                is_Jump = True
 
-        if is_Jump:
-            person.image = load_image('Icons/personJump.png')
-            person.image = pygame.transform.scale(person.image, (50, 64))
-            if Jump_count >= -10:
-                if Jump_count < 0:
-                    person.rect.y += (Jump_count ** 2) / 2
+def level_menu():
+    mainmenu._open(level)
+
+cnt = 0
+
+def game():
+    global cnt
+    cnt += 1
+    if cnt >= 2:
+        global bg1, bg2, bg3, bb1, bb2, bb3, score, screen, enemy, barrier, running, bul, fall, Jump_count, is_Jump, FPS, clock, all_sprites, PlayerAnimCount
+
+        pygame.init()
+        pygame.display.set_caption('Moon Escape')
+        size = width, height = 1000, 400
+        screen = pygame.display.set_mode(size)
+
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                key = pygame.key.get_pressed()
+                if key[pygame.K_SPACE]:
+                    is_Jump = True
+
+            if is_Jump:
+                person.image = load_image('Icons/personJump.png')
+                person.image = pygame.transform.scale(person.image, (50, 64))
+                if Jump_count >= -10:
+                    if Jump_count < 0:
+                        person.rect.y += (Jump_count ** 2) / 2
+                    else:
+                        person.rect.y -= (Jump_count ** 2) / 2
+                    Jump_count -= 1
                 else:
-                    person.rect.y -= (Jump_count ** 2) / 2
-                Jump_count -= 1
+                    is_Jump = False
+                    Jump_count = 10
             else:
-                is_Jump = False
-                Jump_count = 10
-        else:
-            if PlayerAnimCount > 40:
-                score += 1
-                PlayerAnimCount = 0
-            if PlayerAnimCount % 10 == 0:
-                person.AnimationUpdate(PlayerAnimCount // 10)
-            PlayerAnimCount += 1
+                if PlayerAnimCount > 40:
+                    score += 1
+                    PlayerAnimCount = 0
+                if PlayerAnimCount % 10 == 0:
+                    person.AnimationUpdate(PlayerAnimCount // 10)
+                PlayerAnimCount += 1
 
-        if person.rect.y >= 273:
-            person.rect.y = 273
-            
-        bg1.draw()
-        bg2.draw()
-        bg3.draw()
-        bg1.Moving()
-        bg2.Moving()
-        bg3.Moving()
+            if person.rect.y >= 273:
+                person.rect.y = 273
 
-        bb1.draw()
-        bb2.draw()
-        bb3.draw()
-        bb1.Moving()
-        bb2.Moving()
-        bb3.Moving()
+            bg1.draw()
+            bg2.draw()
+            bg3.draw()
+            bg1.Moving()
+            bg2.Moving()
+            bg3.Moving()
 
-        barrier.draw()
-        barrier.Moving()
+            bb1.draw()
+            bb2.draw()
+            bb3.draw()
+            bb1.Moving()
+            bb2.Moving()
+            bb3.Moving()
 
-        bul.draw()
-        bul.Moving()
+            barrier.draw()
+            barrier.Moving()
 
-        draw_text(screen, f"Очки: {score}", 5, 10)
+            bul.draw()
+            bul.Moving()
 
-        enemy.draw()
-        enemy.Moving()
+            draw_text(screen, f"Очки: {score}", 5, 10)
 
-        person.draw()
-        
-        pygame.display.flip()
-        clock.tick(FPS)
+            enemy.draw()
+            enemy.Moving()
 
-    pygame.quit()
+            person.draw()
+
+            pygame.display.flip()
+            clock.tick(FPS)
+
+        pygame.quit()
+
+
+mainmenu = pygame_menu.Menu('Welcome', 600, 400, theme=themes.THEME_SOLARIZED)
+mainmenu.add.text_input('Name: ', default='Billy Herrington', maxchar=20)
+mainmenu.add.button('Играть', level_menu)
+mainmenu.add.button('Таблица лидеров')
+mainmenu.add.button('Выход', pygame_menu.events.EXIT)
+
+level = pygame_menu.Menu('Выбор сложности', 600, 400, theme=themes.THEME_BLUE)
+level.add.selector('Сложность :', [('Лёгкий', 1), ('Средний', 2), ('Сложный', 3), ('Нереальный', 4)],
+                   onchange=set_difficulty)
+level.add.button('Начать игру', game())
+
+mainmenu.mainloop(surface)
