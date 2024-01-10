@@ -65,6 +65,35 @@ class Animated(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, self.scale)
 
 
+class Truba(Mov, pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = load_image('Icons/Turba.png')
+        self.image = pygame.transform.scale(self.image, (32, 96))
+        self.rect = self.image.get_rect(center=(1000, 50))
+        self.count_box = 1
+
+    def Die(self):
+        self.rect.x = randint(1000, 2000)
+
+    def update(self):
+        global barrier
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        self.rect.x -= self.speed
+        if self.rect.x <= 1000 and self.count_box == 1:
+            self.count_box = 0
+            barrier = Barrier(self.rect.x - 10, 150, ['Icons/Box1.png'])
+
+
+        if self.rect.x < self.DiedX:
+            self.Die()
+            self.count_box = 1
+            if barrier:
+                barrier = None
+
+
+
+
 class Barrier(Animated, Mov, pygame.sprite.Sprite):
     def __init__(self, x, y, tp):
         super().__init__()
@@ -72,10 +101,16 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
         self.type = tp
         self.DiedX = -200
         self.image = load_image(self.type[0])
+        self.rect = self.image.get_rect(center=(1000, 305))
         self.count = 0
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y - 63))
+        if self.y < 343:
+            global platformss
+            for i in platformss:
+                if not pygame.sprite.collide_mask(self, i):
+                    self.y += self.speed
         if self.count > len(self.animList) * 10:
             self.count = 0
         if self.count % 10 == 0:
@@ -212,10 +247,12 @@ class BB(Mov, pygame.sprite.Sprite):
 class Platforms(Mov, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.y = randint(150, 250)
-        self.x = 1000
+
         self.DiedX = -130
         self.image = load_image('Icons/platform.png')
+        self.rect = self.image.get_rect()
+        self.y = randint(150, 250)
+        self.x = 1000
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -254,6 +291,7 @@ person = None
 barrier = None
 enemy = None
 bul = None
+truba = None
 score = 0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -275,7 +313,7 @@ def draw_selector():
 
 
 def game():
-    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person
+    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, truba, bg1, bg2, bg3, bb1, bb2, bb3
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -293,6 +331,7 @@ def game():
     isPlay = False
     isBestScoreTable = False
     pause = False
+    reset = False
 
     while running:
         if not isPlay and not isPlayClick:
@@ -337,6 +376,7 @@ def game():
                         rect = pygame.Rect(50, 50 + i * 50, 200, 40)
                         if rect.collidepoint(event.pos):
                             selected_option = options[i]
+                            reset = True
                     # Проверка нажатия кнопок
                     if play_button.is_over(pos):
                         isPlayClick = True
@@ -354,19 +394,20 @@ def game():
                     isPlayClick = False
                     isPlay = False
 
-        if selected_option is not None and flag:
+        if selected_option is not None and flag or reset:
             bg1 = Background(0, 0)
             bg2 = Background(1000, 0)
             bg3 = Background(2000, 0)
             bb1 = BB(0, 63)
             bb2 = BB(1000, 63)
             bb3 = BB(2000, 63)
+            truba = Truba()
             person = Person()
-            barrier = Barrier(1000, 300, ['Icons/Box1.png'])
             enemy = Enemy()
             bul = Bullet('Arrow', -10, 250)
             platformss = [Platforms()]
             flag = False
+            reset = False
 
         if isPlayClick:
             screen.fill(WHITE)
@@ -399,6 +440,7 @@ def game():
             if person.rect.y >= 273:
                 person.rect.y = 273
 
+
             bg1.draw()
             bg2.draw()
             bg3.draw()
@@ -423,9 +465,14 @@ def game():
                     break
                 if i.step == 30:
                     platformss.append(Platforms())
+                if pygame.sprite.collide_mask(i, person):
+                    is_Jump = False
 
-            barrier.draw()
-            barrier.Moving()
+            if barrier != None:
+                barrier.draw()
+                barrier.Moving()
+
+            truba.update()
 
             bul.draw()
             bul.Moving()
