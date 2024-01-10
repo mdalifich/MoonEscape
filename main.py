@@ -101,16 +101,20 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
         self.type = tp
         self.DiedX = -200
         self.image = load_image(self.type[0])
-        self.speed = 5
+        self.rect = self.image.get_rect(center=(1000, 100))
         self.count = 0
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y - 63))
-        self.y += self.speed
         if self.count > len(self.animList) * 10:
             self.count = 0
         if self.count % 10 == 0:
             self.AnimationUpdate(self.count // 10 - 1)
+        if self.y <= 343:
+            self.y += 5
+        #if pygame.sprite.collide_mask(self, person):
+            #self.Die()
+            #person.rect.x -= 100
         self.count += 1
 
     def Die(self):
