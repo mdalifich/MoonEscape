@@ -65,6 +65,35 @@ class Animated(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, self.scale)
 
 
+class Truba(Mov, pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = load_image('Icons/Turba.png')
+        self.image = pygame.transform.scale(self.image, (32, 96))
+        self.rect = self.image.get_rect(center=(1000, 50))
+        self.count_box = 1
+
+    def Die(self):
+        self.rect.x = randint(1000, 2000)
+
+    def update(self):
+        global barrier
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        self.rect.x -= self.speed
+        if self.rect.x <= 1000 and self.count_box == 1:
+            self.count_box = 0
+            barrier = Barrier(self.rect.x - 10, 150, ['Icons/Box1.png'])
+
+
+        if self.rect.x < self.DiedX:
+            self.Die()
+            self.count_box = 1
+            if barrier:
+                barrier = None
+
+
+
+
 class Barrier(Animated, Mov, pygame.sprite.Sprite):
     def __init__(self, x, y, tp):
         super().__init__()
@@ -72,10 +101,12 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
         self.type = tp
         self.DiedX = -200
         self.image = load_image(self.type[0])
+        self.speed = 5
         self.count = 0
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y - 63))
+        self.y += self.speed
         if self.count > len(self.animList) * 10:
             self.count = 0
         if self.count % 10 == 0:
@@ -254,6 +285,7 @@ person = None
 barrier = None
 enemy = None
 bul = None
+truba = None
 score = 0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -275,7 +307,7 @@ def draw_selector():
 
 
 def game():
-    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person
+    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, truba
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -361,8 +393,8 @@ def game():
             bb1 = BB(0, 63)
             bb2 = BB(1000, 63)
             bb3 = BB(2000, 63)
+            truba = Truba()
             person = Person()
-            barrier = Barrier(1000, 300, ['Icons/Box1.png'])
             enemy = Enemy()
             bul = Bullet('Arrow', -10, 250)
             platformss = [Platforms()]
@@ -399,6 +431,7 @@ def game():
             if person.rect.y >= 273:
                 person.rect.y = 273
 
+
             bg1.draw()
             bg2.draw()
             bg3.draw()
@@ -424,8 +457,11 @@ def game():
                 if i.step == 30:
                     platformss.append(Platforms())
 
-            barrier.draw()
-            barrier.Moving()
+            if barrier:
+                barrier.draw()
+                barrier.Moving()
+
+            truba.update()
 
             bul.draw()
             bul.Moving()
