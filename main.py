@@ -492,8 +492,7 @@ def game():
                 RemakeBTN.draw(screen, WHITE)
 
             pygame.display.flip()
-            clock.tick(FPS)
-
+            clock.tick(FPS)##
     pygame.quit()
 
 game()
