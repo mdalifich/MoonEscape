@@ -453,7 +453,7 @@ def game():
             bb3.draw()
             bb1.Moving()
             bb2.Moving()
-            bb3.Moving()
+            bb3.Moving()##
 
             for i in platformss:
                 i.draw()
