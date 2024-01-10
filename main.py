@@ -1,8 +1,5 @@
 import os
 import pygame
-import sys
-import pygame_menu
-from pygame_menu import themes
 from random import randint, choice
 
 
@@ -31,10 +28,19 @@ def load_image(name, colorkey=None):
 class Mov(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        global selected_option
         self.x = 0
         self.y = 0
         self.DiedX = -200
-        self.speed = 10
+        print(selected_option)
+        if selected_option == 'Легкая сложность':
+            self.speed = 10
+        elif selected_option == 'Нормальная сложность':
+            self.speed = 20
+        elif selected_option == 'Сложная сложность':
+            self.speed = 30
+        elif selected_option == 'Non real':
+            self.speed = 40
         self.step = 0
 
     def Die(self):
@@ -116,8 +122,6 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.isAlive = True
         self.DiedX = -1000
         self.x, self.y = x, y
-        if self.typeBullet == 'Arrow':
-            self.speed = 20
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -128,7 +132,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.y = enemy.rect.y + 20
 
     def Moving(self):
-        self.x -= self.speed
+        self.x -= self.speed + 10
         self.y += self.coef
         self.coef += 0.25
         if self.x <= self.DiedX:
@@ -220,134 +224,229 @@ class Platforms(Mov, pygame.sprite.Sprite):
         self.kill()
 
 
-pygame.init()
-surface = pygame.display.set_mode((600, 400))
+class Button:
+    def __init__(self, text, x, y, width, height, color):
+        self.text = text
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = color
+
+    def draw(self, scrn, outline=None):
+        if outline:
+            pygame.draw.rect(scrn, outline, (self.x-2, self.y-2, self.width+4, self.height+4), 0)
+        pygame.draw.rect(scrn, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        font = pygame.font.SysFont(None, 30)
+        text = font.render(self.text, 1, (255, 255, 25))
+        scrn.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
+
+    def is_over(self, pos):
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+        return False
+
 screen = None
-bg1 = Background(0, 0)
-bg2 = Background(1000, 0)
-bg3 = Background(2000, 0)
-bb1 = BB(0, 63)
-bb2 = BB(1000, 63)
-bb3 = BB(2000, 63)
-platformss = [Platforms()]
-all_sprites = pygame.sprite.Group()
-clock = pygame.time.Clock()
-person = Person()
-FPS = 60
-barrier = Barrier(1000, 300, ['Icons/Box1.png'])
-enemy = Enemy()
-bul = Bullet('Arrow', -10, 250)
-running = True
-fall = False
-PlayerAnimCount = 0
-is_Jump = False
-Jump_count = 10
+platformss = None
+person = None
+barrier = None
+enemy = None
+bul = None
 score = 0
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
+options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
+selected_option = None
 
-def set_difficulty(value, difficulty):
-    print(value)
-    print(difficulty)
+# создание функции для отображения селектора
+def draw_selector():
+    font = pygame.font.Font(None, 36)
+    for i, option in enumerate(options):
+        rect = pygame.Rect(50, 50 + i * 50, 290, 40)
+        pygame.draw.rect(screen, WHITE, rect)
+        pygame.draw.rect(screen, BLACK, rect, 2)
+        text = font.render(option, True, BLACK)
+        text_rect = text.get_rect(center=rect.center)
+        screen.blit(text, text_rect)
 
-
-def level_menu():
-    mainmenu._open(level)
 
 
 def game():
-    global bg1, bg2, bg3, bb1, bb2, bb3, score, screen, enemy, barrier, running, bul, fall, Jump_count, is_Jump, \
-        FPS, clock, all_sprites, PlayerAnimCount, platformss
-
+    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person
+    flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
+    clock = pygame.time.Clock()
+    FPS = 60
+    running = True
+    fall = False
+    PlayerAnimCount = 0
+    is_Jump = False
+    Jump_count = 10
+
     size = width, height = 1000, 400
     screen = pygame.display.set_mode(size)
+    isPlayClick = False
+    isPlay = False
+    isBestScoreTable = False
+    pause = False
 
     while running:
+        if not isPlay and not isPlayClick:
+            screen.fill(BLACK)
+
+        # Создание кнопок и рисование
+        play_button = Button('Играть', 400, 100, 200, 50, (0, 255, 0))
+        leader_button = Button('Таблица лидеров', 400, 200, 200, 50, (0, 255, 0))
+        exit_button = Button('Выход', 400, 300, 200, 50, (0, 255, 0))
+        RemakeBTN = Button('Назад', 50, 350, 200, 50, (0, 255, 0))
+        OkBTN = Button('Готово', 400, 50, 200, 50, (0, 255, 0))
+        LevelDanger = Button('', 400, 200, 200, 50, (0, 255, 0))
+
+        if not isPlayClick and not isBestScoreTable and not isPlay:
+            play_button.draw(screen, WHITE)
+            leader_button.draw(screen, WHITE)
+            exit_button.draw(screen, WHITE)
+        else:
+            RemakeBTN.draw(screen, WHITE)
+
+        if isPlayClick:
+            OkBTN.draw(screen, WHITE)
+            LevelDanger.draw(screen, WHITE)
+
+        pygame.display.update()
         for event in pygame.event.get():
+            pos = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
                 running = False
+
             key = pygame.key.get_pressed()
+
             if key[pygame.K_SPACE]:
                 is_Jump = True
 
-        if is_Jump:
-            person.image = load_image('Icons/personJump.png')
-            person.image = pygame.transform.scale(person.image, (50, 64))
-            if Jump_count >= -10:
-                if Jump_count < 0:
-                    person.rect.y += (Jump_count ** 2) / 2
+            if key[pygame.K_ESCAPE]:
+                pause = not pause
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if not isPlay:
+                    for i in range(len(options)):
+                        rect = pygame.Rect(50, 50 + i * 50, 200, 40)
+                        if rect.collidepoint(event.pos):
+                            selected_option = options[i]
+                    # Проверка нажатия кнопок
+                    if play_button.is_over(pos):
+                        isPlayClick = True
+                    if leader_button.is_over(pos):
+                        isBestScoreTable = True
+                    if exit_button.is_over(pos):
+                        running = False
+                    if OkBTN.is_over(pos):
+                        if selected_option is not None:
+                            isPlay = True
+                            isPlayClick = False
+
+                if RemakeBTN.is_over(pos):
+                    isBestScoreTable = False
+                    isPlayClick = False
+                    isPlay = False
+
+        if selected_option is not None and flag:
+            bg1 = Background(0, 0)
+            bg2 = Background(1000, 0)
+            bg3 = Background(2000, 0)
+            bb1 = BB(0, 63)
+            bb2 = BB(1000, 63)
+            bb3 = BB(2000, 63)
+            person = Person()
+            barrier = Barrier(1000, 300, ['Icons/Box1.png'])
+            enemy = Enemy()
+            bul = Bullet('Arrow', -10, 250)
+            platformss = [Platforms()]
+            flag = False
+
+        if isPlayClick:
+            screen.fill(WHITE)
+            draw_selector()
+
+        if isBestScoreTable:
+            pass
+
+        if isPlay and not pause:
+            if is_Jump:
+                person.image = load_image('Icons/personJump.png')
+                person.image = pygame.transform.scale(person.image, (50, 64))
+                if Jump_count >= -10:
+                    if Jump_count < 0:
+                        person.rect.y += (Jump_count ** 2) / 2
+                    else:
+                        person.rect.y -= (Jump_count ** 2) / 2
+                    Jump_count -= 1
                 else:
-                    person.rect.y -= (Jump_count ** 2) / 2
-                Jump_count -= 1
+                    is_Jump = False
+                    Jump_count = 10
             else:
-                is_Jump = False
-                Jump_count = 10
-        else:
-            if PlayerAnimCount > 40:
-                score += 1
-                PlayerAnimCount = 0
-            if PlayerAnimCount % 10 == 0:
-                person.AnimationUpdate(PlayerAnimCount // 10)
-            PlayerAnimCount += 1
+                if PlayerAnimCount > 40:
+                    score += 1
+                    PlayerAnimCount = 0
+                if PlayerAnimCount % 10 == 0:
+                    person.AnimationUpdate(PlayerAnimCount // 10)
+                PlayerAnimCount += 1
 
-        if person.rect.y >= 273:
-            person.rect.y = 273
+            if person.rect.y >= 273:
+                person.rect.y = 273
 
-        bg1.draw()
-        bg2.draw()
-        bg3.draw()
-        bg1.Moving()
-        bg2.Moving()
-        bg3.Moving()
+            bg1.draw()
+            bg2.draw()
+            bg3.draw()
+            bg1.Moving()
+            bg2.Moving()
+            bg3.Moving()
 
-        bb1.draw()
-        bb2.draw()
-        bb3.draw()
-        bb1.Moving()
-        bb2.Moving()
-        bb3.Moving()
+            bb1.draw()
+            bb2.draw()
+            bb3.draw()
+            bb1.Moving()
+            bb2.Moving()
+            bb3.Moving()
 
-        for i in platformss:
-            i.draw()
+            for i in platformss:
+                i.draw()
 
-        for i in platformss:
-            i.Moving()
-            if i.x <= i.DiedX:
-                del platformss[platformss.index(i)]
-                break
-            if i.step == 30:
-                platformss.append(Platforms())
+            for i in platformss:
+                i.Moving()
+                if i.x <= i.DiedX:
+                    del platformss[platformss.index(i)]
+                    break
+                if i.step == 30:
+                    platformss.append(Platforms())
 
-        barrier.draw()
-        barrier.Moving()
+            barrier.draw()
+            barrier.Moving()
 
-        bul.draw()
-        bul.Moving()
+            bul.draw()
+            bul.Moving()
 
-        draw_text(screen, f"Очки: {score}", 5, 10)
+            draw_text(screen, f"Очки: {score}", 5, 10)
 
-        enemy.draw()
-        enemy.Moving()
+            enemy.draw()
+            enemy.Moving()
 
-        person.draw()
+            person.draw()
 
-        pygame.display.flip()
-        clock.tick(FPS)
+            if not isPlayClick and not isBestScoreTable and not isPlay:
+                play_button.draw(screen, WHITE)
+                leader_button.draw(screen, WHITE)
+                exit_button.draw(screen, WHITE)
+            else:
+                RemakeBTN.draw(screen, WHITE)
+
+            pygame.display.flip()
+            clock.tick(FPS)
 
     pygame.quit()
 
-
-
-mainmenu = pygame_menu.Menu('Welcome', 600, 400, theme=themes.THEME_SOLARIZED)
-mainmenu.add.text_input('Name: ', default='Billy Herrington', maxchar=20)
-mainmenu.add.button('Играть', level_menu)
-mainmenu.add.button('Таблица лидеров')
-mainmenu.add.button('Выход', pygame_menu.events.EXIT)
-
-level = pygame_menu.Menu('Выбор сложности', 600, 400, theme=themes.THEME_BLUE)
-level.add.selector('Сложность :', [('Лёгкий', 1), ('Средний', 2), ('Сложный', 3), ('Нереальный', 4)],
-                   onchange=set_difficulty)
-level.add.button('Начать игру', game())
-
-mainmenu.mainloop(surface)
+game()
