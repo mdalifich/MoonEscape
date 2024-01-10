@@ -101,20 +101,20 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
         self.type = tp
         self.DiedX = -200
         self.image = load_image(self.type[0])
-        self.rect = self.image.get_rect(center=(1000, 100))
+        self.rect = self.image.get_rect(center=(1000, 305))
         self.count = 0
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y - 63))
+        if self.y < 343:
+            global platformss
+            for i in platformss:
+                if not pygame.sprite.collide_mask(self, i):
+                    self.y += self.speed
         if self.count > len(self.animList) * 10:
             self.count = 0
         if self.count % 10 == 0:
             self.AnimationUpdate(self.count // 10 - 1)
-        if self.y <= 343:
-            self.y += 5
-        #if pygame.sprite.collide_mask(self, person):
-            #self.Die()
-            #person.rect.x -= 100
         self.count += 1
 
     def Die(self):
@@ -247,10 +247,12 @@ class BB(Mov, pygame.sprite.Sprite):
 class Platforms(Mov, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.y = randint(150, 250)
-        self.x = 1000
+
         self.DiedX = -130
         self.image = load_image('Icons/platform.png')
+        self.rect = self.image.get_rect()
+        self.y = randint(150, 250)
+        self.x = 1000
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
@@ -311,7 +313,7 @@ def draw_selector():
 
 
 def game():
-    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, truba
+    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, truba, bg1, bg2, bg3, bb1, bb2, bb3
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -329,6 +331,7 @@ def game():
     isPlay = False
     isBestScoreTable = False
     pause = False
+    reset = False
 
     while running:
         if not isPlay and not isPlayClick:
@@ -373,6 +376,7 @@ def game():
                         rect = pygame.Rect(50, 50 + i * 50, 200, 40)
                         if rect.collidepoint(event.pos):
                             selected_option = options[i]
+                            reset = True
                     # Проверка нажатия кнопок
                     if play_button.is_over(pos):
                         isPlayClick = True
@@ -390,7 +394,7 @@ def game():
                     isPlayClick = False
                     isPlay = False
 
-        if selected_option is not None and flag:
+        if selected_option is not None and flag or reset:
             bg1 = Background(0, 0)
             bg2 = Background(1000, 0)
             bg3 = Background(2000, 0)
@@ -403,6 +407,7 @@ def game():
             bul = Bullet('Arrow', -10, 250)
             platformss = [Platforms()]
             flag = False
+            reset = False
 
         if isPlayClick:
             screen.fill(WHITE)
@@ -448,7 +453,7 @@ def game():
             bb3.draw()
             bb1.Moving()
             bb2.Moving()
-            bb3.Moving()
+            bb3.Moving()##
 
             for i in platformss:
                 i.draw()
@@ -460,8 +465,10 @@ def game():
                     break
                 if i.step == 30:
                     platformss.append(Platforms())
+                if pygame.sprite.collide_mask(i, person):
+                    is_Jump = False
 
-            if barrier:
+            if barrier != None:
                 barrier.draw()
                 barrier.Moving()
 
@@ -486,7 +493,6 @@ def game():
 
             pygame.display.flip()
             clock.tick(FPS)
-
     pygame.quit()
 
 game()
