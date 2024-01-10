@@ -3,6 +3,7 @@ import pygame
 import sys
 import pygame_menu
 from pygame_menu import themes
+from random import randint, choice
 
 
 def draw_text(wind, text, x, y):
@@ -34,6 +35,7 @@ class Mov(pygame.sprite.Sprite):
         self.y = 0
         self.DiedX = -200
         self.speed = 10
+        self.step = 0
 
     def Die(self):
         pass
@@ -42,6 +44,7 @@ class Mov(pygame.sprite.Sprite):
         self.x -= self.speed
         if self.x <= self.DiedX:
             self.Die()
+        self.step += 1
 
 
 class Animated(pygame.sprite.Sprite):
@@ -74,7 +77,7 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
         self.count += 1
 
     def Die(self):
-        barrier.kill()
+        self.x = randint(1000, 2000)
 
 
 class Person(Animated, pygame.sprite.Sprite):
@@ -108,9 +111,10 @@ class Bullet(Mov, pygame.sprite.Sprite):
         super().__init__()
         self.coef = -6
         self.image = load_image(f'Icons/{typebul}.png')
+        self.image = pygame.transform.scale(self.image, (30, 8))
         self.typeBullet = typebul
         self.isAlive = True
-        self.DiedX = -50
+        self.DiedX = -1000
         self.x, self.y = x, y
         if self.typeBullet == 'Arrow':
             self.speed = 20
@@ -141,8 +145,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(1000, 305))
 
     def Die(self):
-        # enemy.kill()
-        self.rect.x = 1000
+        self.rect.x = randint(1000, 2000)
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -201,9 +204,24 @@ class BB(Mov, pygame.sprite.Sprite):
         if self.x <= self.DiedX:
             self.Die()
 
+
+class Platforms(Mov, pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.y = randint(150, 250)
+        self.x = 1000
+        self.DiedX = -130
+        self.image = load_image('Icons/platform.png')
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    def Die(self):
+        self.kill()
+
+
 pygame.init()
 surface = pygame.display.set_mode((600, 400))
-
 screen = None
 bg1 = Background(0, 0)
 bg2 = Background(1000, 0)
@@ -211,6 +229,7 @@ bg3 = Background(2000, 0)
 bb1 = BB(0, 63)
 bb2 = BB(1000, 63)
 bb3 = BB(2000, 63)
+platformss = [Platforms()]
 all_sprites = pygame.sprite.Group()
 clock = pygame.time.Clock()
 person = Person()
@@ -234,81 +253,90 @@ def set_difficulty(value, difficulty):
 def level_menu():
     mainmenu._open(level)
 
-cnt = 0
 
 def game():
-    global cnt
-    cnt += 1
-    if cnt >= 2:
-        global bg1, bg2, bg3, bb1, bb2, bb3, score, screen, enemy, barrier, running, bul, fall, Jump_count, is_Jump, FPS, clock, all_sprites, PlayerAnimCount
+    global bg1, bg2, bg3, bb1, bb2, bb3, score, screen, enemy, barrier, running, bul, fall, Jump_count, is_Jump, \
+        FPS, clock, all_sprites, PlayerAnimCount, platformss
 
-        pygame.init()
-        pygame.display.set_caption('Moon Escape')
-        size = width, height = 1000, 400
-        screen = pygame.display.set_mode(size)
+    pygame.init()
+    pygame.display.set_caption('Moon Escape')
+    size = width, height = 1000, 400
+    screen = pygame.display.set_mode(size)
 
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                key = pygame.key.get_pressed()
-                if key[pygame.K_SPACE]:
-                    is_Jump = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            key = pygame.key.get_pressed()
+            if key[pygame.K_SPACE]:
+                is_Jump = True
 
-            if is_Jump:
-                person.image = load_image('Icons/personJump.png')
-                person.image = pygame.transform.scale(person.image, (50, 64))
-                if Jump_count >= -10:
-                    if Jump_count < 0:
-                        person.rect.y += (Jump_count ** 2) / 2
-                    else:
-                        person.rect.y -= (Jump_count ** 2) / 2
-                    Jump_count -= 1
+        if is_Jump:
+            person.image = load_image('Icons/personJump.png')
+            person.image = pygame.transform.scale(person.image, (50, 64))
+            if Jump_count >= -10:
+                if Jump_count < 0:
+                    person.rect.y += (Jump_count ** 2) / 2
                 else:
-                    is_Jump = False
-                    Jump_count = 10
+                    person.rect.y -= (Jump_count ** 2) / 2
+                Jump_count -= 1
             else:
-                if PlayerAnimCount > 40:
-                    score += 1
-                    PlayerAnimCount = 0
-                if PlayerAnimCount % 10 == 0:
-                    person.AnimationUpdate(PlayerAnimCount // 10)
-                PlayerAnimCount += 1
+                is_Jump = False
+                Jump_count = 10
+        else:
+            if PlayerAnimCount > 40:
+                score += 1
+                PlayerAnimCount = 0
+            if PlayerAnimCount % 10 == 0:
+                person.AnimationUpdate(PlayerAnimCount // 10)
+            PlayerAnimCount += 1
 
-            if person.rect.y >= 273:
-                person.rect.y = 273
+        if person.rect.y >= 273:
+            person.rect.y = 273
 
-            bg1.draw()
-            bg2.draw()
-            bg3.draw()
-            bg1.Moving()
-            bg2.Moving()
-            bg3.Moving()
+        bg1.draw()
+        bg2.draw()
+        bg3.draw()
+        bg1.Moving()
+        bg2.Moving()
+        bg3.Moving()
 
-            bb1.draw()
-            bb2.draw()
-            bb3.draw()
-            bb1.Moving()
-            bb2.Moving()
-            bb3.Moving()
+        bb1.draw()
+        bb2.draw()
+        bb3.draw()
+        bb1.Moving()
+        bb2.Moving()
+        bb3.Moving()
 
-            barrier.draw()
-            barrier.Moving()
+        for i in platformss:
+            i.draw()
 
-            bul.draw()
-            bul.Moving()
+        for i in platformss:
+            i.Moving()
+            if i.x <= i.DiedX:
+                del platformss[platformss.index(i)]
+                break
+            if i.step == 30:
+                platformss.append(Platforms())
 
-            draw_text(screen, f"Очки: {score}", 5, 10)
+        barrier.draw()
+        barrier.Moving()
 
-            enemy.draw()
-            enemy.Moving()
+        bul.draw()
+        bul.Moving()
 
-            person.draw()
+        draw_text(screen, f"Очки: {score}", 5, 10)
 
-            pygame.display.flip()
-            clock.tick(FPS)
+        enemy.draw()
+        enemy.Moving()
 
-        pygame.quit()
+        person.draw()
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+    pygame.quit()
+
 
 
 mainmenu = pygame_menu.Menu('Welcome', 600, 400, theme=themes.THEME_SOLARIZED)
