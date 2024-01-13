@@ -98,19 +98,27 @@ class Barrier(Animated, Mov, pygame.sprite.Sprite):
     def __init__(self, x, y, tp):
         super().__init__()
         self.x, self.y = x, y
+        self.endY = 300
+        self.minus = 14
         self.type = tp
         self.DiedX = -200
         self.image = load_image(self.type[0])
-        self.rect = self.image.get_rect(center=(1000, 305))
+        self.rect = self.image.get_rect()
         self.count = 0
+        global platformss
+        for i in platformss:
+            if i.x <= self.x <= i.x + 96:
+                self.endY = i.y
+                self.minus = 50
+
 
     def draw(self):
-        screen.blit(self.image, (self.x, self.y - 63))
-        if self.y < 343:
+        screen.blit(self.image, (self.x, self.y))
+        if self.y < self.endY - self.minus:
             global platformss
             for i in platformss:
                 if not pygame.sprite.collide_mask(self, i):
-                    self.y += self.speed
+                    self.y += 1
         if self.count > len(self.animList) * 10:
             self.count = 0
         if self.count % 10 == 0:
@@ -128,11 +136,13 @@ class Person(Animated, pygame.sprite.Sprite):
                          'Icons/person5.png']
         self.hp = 5
         self.weapon = 0
-        self.image = load_image(self.animList[0])
+        self.image = load_image(self.animList[0]).convert_alpha()
         self.image = pygame.transform.scale(self.image, (42, 64))
-        self.rect = self.image.get_rect(center=(300, 305))
+        self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.scale = (42, 64)
+        self.rect.x = 300
+        self.rect.y = 300
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -181,7 +191,10 @@ class Enemy(Mov, pygame.sprite.Sprite):
         self.DiedX = -200
         self.image = load_image('Icons/enemy.png')
         self.image = pygame.transform.scale(self.image, (42, 64))
-        self.rect = self.image.get_rect(center=(1000, 305))
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x = 1000
+        self.rect.y = 273
 
     def Die(self):
         self.rect.x = randint(1000, 2000)
@@ -193,6 +206,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
         self.rect.x -= self.speed
         if self.rect.x <= self.DiedX:
             self.Die()
+        print(pygame.sprite.collide_mask(self, person), 'Enemy')
         if pygame.sprite.collide_mask(self, person):
             self.Die()
             person.rect.x -= 100
@@ -249,13 +263,20 @@ class Platforms(Mov, pygame.sprite.Sprite):
         super().__init__()
 
         self.DiedX = -130
-        self.image = load_image('Icons/platform.png')
+        self.image = load_image('Icons/platform.png').convert_alpha()
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
         self.y = randint(150, 250)
         self.x = 1000
 
     def draw(self):
         screen.blit(self.image, (self.x, self.y))
+
+        print(pygame.sprite.collide_mask(self, person))
+
+    def update(self):
+        if pygame.sprite.collide_mask(self, person):
+            print('sdgsd')
 
     def Die(self):
         self.kill()
@@ -343,7 +364,14 @@ def game():
         exit_button = Button('Выход', 400, 300, 200, 50, (0, 255, 0))
         RemakeBTN = Button('Назад', 50, 350, 200, 50, (0, 255, 0))
         OkBTN = Button('Готово', 400, 50, 200, 50, (0, 255, 0))
-        LevelDanger = Button('', 400, 200, 200, 50, (0, 255, 0))
+
+        if isPlayClick:
+            screen.fill(BLACK)
+            draw_selector()
+
+        if isBestScoreTable:
+            screen.fill(BLACK)
+            draw_text(screen, 'Hello', 100, 100)
 
         if not isPlayClick and not isBestScoreTable and not isPlay:
             play_button.draw(screen, WHITE)
@@ -354,9 +382,12 @@ def game():
 
         if isPlayClick:
             OkBTN.draw(screen, WHITE)
-            LevelDanger.draw(screen, WHITE)
+            global selected_option
+            if selected_option != None:
+                draw_text(screen, selected_option, 400, 200)
 
         pygame.display.update()
+
         for event in pygame.event.get():
             pos = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
@@ -408,13 +439,8 @@ def game():
             platformss = [Platforms()]
             flag = False
             reset = False
+            score = 0
 
-        if isPlayClick:
-            screen.fill(WHITE)
-            draw_selector()
-
-        if isBestScoreTable:
-            pass
 
         if isPlay and not pause:
             if is_Jump:
@@ -429,6 +455,10 @@ def game():
                 else:
                     is_Jump = False
                     Jump_count = 10
+                for i in platformss:
+                    if i.x <= person.rect.x <= i.x + 96:
+                        if i.y == person.rect.y:
+                            is_Jump = False
             else:
                 if PlayerAnimCount > 40:
                     score += 1
@@ -453,10 +483,11 @@ def game():
             bb3.draw()
             bb1.Moving()
             bb2.Moving()
-            bb3.Moving()##
+            bb3.Moving()
 
             for i in platformss:
                 i.draw()
+                i.update()
 
             for i in platformss:
                 i.Moving()
@@ -465,8 +496,6 @@ def game():
                     break
                 if i.step == 30:
                     platformss.append(Platforms())
-                if pygame.sprite.collide_mask(i, person):
-                    is_Jump = False
 
             if barrier != None:
                 barrier.draw()
