@@ -1,5 +1,6 @@
 import os
 import pygame
+from operator import itemgetter
 from random import randint, choice
 
 
@@ -370,8 +371,13 @@ def game():
             draw_selector()
 
         if isBestScoreTable:
-            screen.fill(BLACK)
-            draw_text(screen, 'Hello', 100, 100)
+            draw_text(screen, 'Топ 5', 440, 20)
+            k = 1
+            sp = [['fasf', 403], ['fagfff', 63], ['asfgsf', 103], ['zxcvavf', 41]]
+            sp_right = sorted(sp, key=itemgetter(1), reverse=True)
+            for i in range(len(sp)):
+                draw_text(screen, f'{sp_right[i][0]} — Количество очков {sp_right[i][1]}', 200, 40 + k * 35)
+                k += 1
 
         if not isPlayClick and not isBestScoreTable and not isPlay:
             play_button.draw(screen, WHITE)
