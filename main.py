@@ -38,7 +38,7 @@ class Mov(pygame.sprite.Sprite):
         if selected_option == 'Легкая сложность':
             self.speed = 10
         elif selected_option == 'Нормальная сложность':
-            self.speed = 20
+            self.speed = 15
         elif selected_option == 'Сложная сложность':
             self.speed = 30
         elif selected_option == 'Non real':
@@ -181,7 +181,8 @@ class Bullet(Mov, pygame.sprite.Sprite):
 
     def Moving(self):
         self.rect.x -= self.speed + 10
-        self.rect.y += self.coef
+        if self.typeBullet == 'Arrow':
+            self.rect.y += self.coef
         self.coef += 0.25
         if self.rect.x <= self.DiedX:
             self.Die()
@@ -225,7 +226,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
     def Fire(self):
         global bul
         if not bul.isAlive:
-            bul = Bullet('Arrow', self.x, self.y + 25)
+            bul = Bullet('lazer', self.x, self.y + 25)
             bul.draw()
         if bul.x <= bul.DiedX:
             bul.Die()
@@ -254,7 +255,10 @@ class BB(Mov, pygame.sprite.Sprite):
         self.x, self.y = x, y
         self.speed = 1
         self.DiedX = -1000
-        self.image = load_image('Icons/BBackground.png')
+        self.iconList = {'Легкая сложность': 'Icons/BBackground.png', 'Нормальная сложность': 'Icons/fon2.png',
+                         'Сложная сложность': 'Icons/fon3.png', 'Non real': 'Icons/Fon1.png'}
+        global selected_option
+        self.image = load_image(self.iconList[selected_option])
         self.rect = Rect(self.x, self.y, 1000, 274)
 
     def draw(self):
@@ -492,7 +496,7 @@ def game():
             Turba = Truba()
             person = Person()
             enemy = Enemy()
-            bul = Bullet('Arrow', -10, 250)
+            bul = Bullet('lazer', -10, 250)
             all_Die_sprites = [enemy, bul]
             platformss = [Platforms()]
             flag = False
