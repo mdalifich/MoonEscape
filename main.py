@@ -2,6 +2,7 @@ import os
 import pygame
 from operator import itemgetter
 from random import randint, choice
+import sys
 
 
 def draw_text(wind, text, x, y):
@@ -317,6 +318,7 @@ truba = None
 score = 0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+name = ''
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -335,7 +337,7 @@ def draw_selector():
 
 
 def game():
-    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, truba, bg1, bg2, bg3, bb1, bb2, bb3
+    global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, truba, bg1, bg2, bg3, bb1, bb2, bb3, name
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -346,6 +348,12 @@ def game():
     PlayerAnimCount = 0
     is_Jump = False
     Jump_count = 10
+
+    input_rect = pygame.Rect(200, 200, 140, 32)
+    color_active = pygame.Color('lightskyblue3')
+    color_passive = pygame.Color('chartreuse4')
+    color = color_passive
+    active = False
 
     size = width, height = 1000, 400
     screen = pygame.display.set_mode(size)
@@ -373,7 +381,7 @@ def game():
         if isBestScoreTable:
             draw_text(screen, 'Топ 5', 440, 20)
             k = 1
-            sp = [['fasf', 403], ['fagfff', 63], ['asfgsf', 103], ['zxcvavf', 41]]
+            sp = [['fasf', 403], ['fagfff', 63], ['asfgsf', 103], ['ARTUR', 1000]]
             sp_right = sorted(sp, key=itemgetter(1), reverse=True)
             for i in range(len(sp)):
                 draw_text(screen, f'{sp_right[i][0]} — Количество очков {sp_right[i][1]}', 200, 40 + k * 35)
@@ -383,6 +391,9 @@ def game():
             play_button.draw(screen, WHITE)
             leader_button.draw(screen, WHITE)
             exit_button.draw(screen, WHITE)
+            draw_text(screen, f'Введите свой ник:', 350, 10)
+            draw_text(screen, name, 450, 45)
+
         else:
             RemakeBTN.draw(screen, WHITE)
 
@@ -392,7 +403,7 @@ def game():
             if selected_option != None:
                 draw_text(screen, selected_option, 400, 200)
 
-        pygame.display.update()
+
 
         for event in pygame.event.get():
             pos = pygame.mouse.get_pos()
@@ -415,12 +426,14 @@ def game():
                             selected_option = options[i]
                             reset = True
                     # Проверка нажатия кнопок
+                if not isPlayClick and not isPlay:
                     if play_button.is_over(pos):
                         isPlayClick = True
                     if leader_button.is_over(pos):
                         isBestScoreTable = True
                     if exit_button.is_over(pos):
                         running = False
+                if isPlayClick:
                     if OkBTN.is_over(pos):
                         if selected_option is not None:
                             isPlay = True
@@ -430,6 +443,19 @@ def game():
                     isBestScoreTable = False
                     isPlayClick = False
                     isPlay = False
+
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                else:
+                    if len(name) <= 4:
+                        name += event.unicode
+
+
+        pygame.display.update()
+
+
 
         if selected_option is not None and flag or reset:
             bg1 = Background(0, 0)
@@ -448,7 +474,7 @@ def game():
             score = 0
 
 
-        if isPlay and not pause:
+        if isPlay and not pause and name != '':
             if is_Jump:
                 person.image = load_image('Icons/personJump.png')
                 person.image = pygame.transform.scale(person.image, (50, 64))
