@@ -498,7 +498,6 @@ def game():
             reset = False
             Jump_count = 10
             Fall_count = 0
-            double_is_ground = False
             is_is_PlatformCollide = False
             score = 0
             money = 0
@@ -510,15 +509,13 @@ def game():
                 if pygame.sprite.collide_mask(person, i):
                     person.rect.y = i.rect.y - 63
                     is_is_PlatformCollide = True
-                    double_is_ground = True
 
             if is_Jump:
                 person.image = load_image('Icons/personJump.png')
                 person.image = pygame.transform.scale(person.image, (50, 64))
                 if Jump_count > 0:
-                    if double_is_ground:
-                        person.rect.y -= (Jump_count ** 2) / 2
-                        Jump_count -= 1
+                    person.rect.y -= (Jump_count ** 2) / 2
+                    Jump_count -= 1
                 else:
                     if Fall_count < 11 and not is_is_PlatformCollide:
                         person.rect.y += (Fall_count ** 2) / 2
