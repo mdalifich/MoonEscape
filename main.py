@@ -76,10 +76,11 @@ class Truba(Mov, pygame.sprite.Sprite):
         self.count_box = 1
 
     def Die(self):
-        self.rect.x = randint(1000, 2000)
+        self.rect.x = 1000
         global barrier
         barrier.rect.x = self.rect.x
         barrier.rect.y = self.rect.y
+        barrier.endY = 296
 
     def draw(self):
         global barrier
@@ -106,14 +107,13 @@ class Truba(Mov, pygame.sprite.Sprite):
         if self.rect.x < self.DiedX:
             self.Die()
             self.count_box = 1
-            if barrier:
-                barrier = None
 
 
 class Barrier(Mov, pygame.sprite.Sprite):
     def __init__(self, x, y, tp):
         super().__init__()
         self.x, self.y = x, y
+        self.endY = 296
         self.type = tp
         self.DiedX = -200
         self.image = load_image(self.type[0])
@@ -124,8 +124,10 @@ class Barrier(Mov, pygame.sprite.Sprite):
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         for i in platformss:
-            if self.rect.y < 273 and not pygame.sprite.collide_mask(self, i):
+            if self.rect.y < self.endY and not pygame.sprite.collide_mask(self, i):
                 self.rect.y += 1
+            if pygame.sprite.collide_mask(self, i):
+                self.endY = i.rect.y - 46
         self.count += 1
 
 
@@ -352,7 +354,6 @@ enemy = None
 bul = None
 Turba = None
 money = 0
-double_is_ground = False
 Fall_count = 0
 is_is_PlatformCollide = False
 score = 0
@@ -520,9 +521,10 @@ def game():
                     if Fall_count < 11 and not is_is_PlatformCollide:
                         person.rect.y += (Fall_count ** 2) / 2
                         Fall_count += 1
-                    elif Fall_count >= 11:
-                            Jump_count = 10
-                            Fall_count = 0
+                    else:
+                        Jump_count = 10
+                        Fall_count = 0
+                        is_Jump = False
             else:
                 Jump_count = 10
                 if PlayerAnimCount > 40:
