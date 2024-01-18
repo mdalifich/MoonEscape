@@ -446,7 +446,7 @@ name = ''
 OpenTheDoors = False
 door = None
 musikDisk = ["Sounds/loonboon.mp3", "Sounds/Ken.mp3"]
-vol = 1
+vol = 0.5
 
 pygame.mixer.init()
 pygame.mixer.music.load(choice(musikDisk))
