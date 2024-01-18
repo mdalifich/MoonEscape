@@ -36,13 +36,13 @@ class Mov(pygame.sprite.Sprite):
         self.DiedX = -200
         self.rect = Rect(0, 0, 1, 1)
         if selected_option == 'Легкая сложность':
-            self.speed = 10
+            self.speed = 8
         elif selected_option == 'Нормальная сложность':
             self.speed = 15
         elif selected_option == 'Сложная сложность':
-            self.speed = 30
+            self.speed = 20
         elif selected_option == 'Non real':
-            self.speed = 40
+            self.speed = 30
         self.step = 0
 
     def Die(self):
@@ -323,7 +323,7 @@ class Money(Animated, Mov, pygame.sprite.Sprite):
         self.animList = ['Icons/Money.png', 'Icons/Money2.png', 'Icons/Money3.png', 'Icons/Money4.png', 'Icons/Money5.png', 'Icons/Money6.png']
         self.Collid = False
         self.AnimCount = 0
-        self.y = randint(150, 250)
+        self.y = randint(150, 280)
         self.x = 1000
         self.DiedX = -130
         self.image = load_image(self.animList[0])
