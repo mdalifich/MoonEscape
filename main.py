@@ -83,6 +83,7 @@ class Truba(Mov, pygame.sprite.Sprite):
         barrier.rect.y = self.rect.y
         barrier.image = load_image(choice(barrier.type))
         barrier.image = pygame.transform.scale(barrier.image, (42, 42))
+        BoxInTrubaSound.play()
         barrier.endY = 296
 
     def draw(self):
@@ -105,6 +106,7 @@ class Truba(Mov, pygame.sprite.Sprite):
             barrier.rect.y = self.rect.y
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
+            BoxInTrubaSound.play()
 
         if pygame.sprite.collide_mask(barrier, person):
             global collis
@@ -114,6 +116,7 @@ class Truba(Mov, pygame.sprite.Sprite):
             barrier.rect.y = self.rect.y
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
+            BoxInTrubaSound.play()
 
         if self.rect.x < self.DiedX:
             self.Die()
@@ -189,6 +192,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.coef = -6
         self.rect.x = enemy.rect.x
         self.rect.y = enemy.rect.y + 20
+        lazerSound.play()
 
     def Moving(self):
         self.rect.x -= self.speed + 10
@@ -448,11 +452,18 @@ door = None
 musikDisk = ["Sounds/loonboon.mp3", "Sounds/Ken.mp3"]
 vol = 0.5
 
+pygame.mixer.pre_init(44100, -16, 1, 512)
+
 pygame.mixer.init()
 pygame.mixer.music.load(choice(musikDisk))
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(vol)
 pygame.mixer.music.pause()
+
+stepSound = pygame.mixer.Sound('Sounds/step.mp3')
+lazerSound = pygame.mixer.Sound('Sounds/Lazer.mp3')
+clickSound = pygame.mixer.Sound('Sounds/Click.mp3')
+BoxInTrubaSound = pygame.mixer.Sound('Sounds/BoxInTruba.mp3')
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -562,6 +573,7 @@ def game():
                 pause = not pause
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                clickSound.play()
                 if RemakeBTN.is_over(pos) and EndGame:
                     reset = True
                 if not isPlay:
@@ -655,6 +667,7 @@ def game():
                     if PlayerAnimCount > 40:
                         score += 1
                         PlayerAnimCount = 0
+                        stepSound.play()
                     if PlayerAnimCount % 10 == 0:
                         person.AnimationUpdate(PlayerAnimCount // 10)
                     PlayerAnimCount += 1
