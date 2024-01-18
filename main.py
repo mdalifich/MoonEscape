@@ -1,8 +1,10 @@
 import os
+import sys
+from operator import itemgetter
+from random import randint
+
 import pygame
 from pygame import *
-from random import randint, choice
-from operator import itemgetter
 
 
 def draw_text(wind, text, x, y):
@@ -363,6 +365,7 @@ is_is_PlatformCollide = False
 score = 0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+name = ''
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -382,7 +385,7 @@ def draw_selector():
 
 def game():
     global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, collis, \
-        Turba, is_is_PlatformCollide, Fall_count, double_is_ground, money, all_money
+        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -392,6 +395,12 @@ def game():
     PlayerAnimCount = 0
     is_Jump = False
     Jump_count = 10
+
+    input_rect = pygame.Rect(200, 200, 140, 32)
+    color_active = pygame.Color('lightskyblue3')
+    color_passive = pygame.Color('chartreuse4')
+    color = color_passive
+    active = False
 
     size = width, height = 1000, 400
     screen = pygame.display.set_mode(size)
@@ -407,6 +416,7 @@ def game():
     bb1 = None
     bb2 = None
     bb3 = None
+    EndGame = False
 
     while running:
         if not isPlay and not isPlayClick:
@@ -418,7 +428,8 @@ def game():
         leader_button = Button('Таблица лидеров', 400, 200, 200, 50, (0, 255, 0))
         exit_button = Button('Выход', 400, 300, 200, 50, (0, 255, 0))
         OkBTN = Button('Готово', 400, 50, 200, 50, (0, 255, 0))
-        RemakeBTN = Button('Назад', 50, 350, 200, 50, (0, 255, 0))
+        BackBtn = Button('Назад', 50, 350, 200, 50, (0, 255, 0))
+        RemakeBTN = Button('Начать заного', 50, 100, 200, 50, (0, 255, 0))
 
         if isPlayClick:
             screen.fill(BLACK)
@@ -427,7 +438,7 @@ def game():
         if isBestScoreTable:
             draw_text(screen, 'Топ 5', 440, 20)
             k = 1
-            sp = [['fasf', 403], ['fagfff', 63], ['asfgsf', 103], ['zxcvavf', 41]]
+            sp = [['fasf', 403], ['fagfff', 63], ['asfgsf', 103], ['ARTUR', 1000]]
             sp_right = sorted(sp, key=itemgetter(1), reverse=True)
             for i in range(len(sp)):
                 draw_text(screen, f'{sp_right[i][0]} — Количество очков {sp_right[i][1]}', 200, 40 + k * 35)
@@ -437,8 +448,10 @@ def game():
             play_button.draw(screen, WHITE)
             leader_button.draw(screen, WHITE)
             exit_button.draw(screen, WHITE)
+            draw_text(screen, f'Введите свой ник:', 350, 10)
+            draw_text(screen, name, 450, 45)
         else:
-            RemakeBTN.draw(screen, WHITE)
+            BackBtn.draw(screen, WHITE)
 
         if isPlayClick:
             OkBTN.draw(screen, WHITE)
@@ -462,6 +475,8 @@ def game():
                 pause = not pause
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if RemakeBTN.is_over(pos) and EndGame:
+                    reset = True
                 if not isPlay:
                     for i in range(len(options)):
                         rect = pygame.Rect(50, 50 + i * 50, 200, 40)
@@ -481,10 +496,19 @@ def game():
                             if selected_option is not None:
                                 isPlay = True
                                 isPlayClick = False
-                if RemakeBTN.is_over(pos):
+                if BackBtn.is_over(pos):
                     isBestScoreTable = False
                     isPlayClick = False
                     isPlay = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                else:
+                    if len(name) <= 4:
+                        name += event.unicode
+
+            pygame.display.update()
 
         if selected_option is not None and flag or reset:
             bg1 = Background(0, 0)
@@ -508,106 +532,117 @@ def game():
             money = 0
             all_money = [Money()]
 
-        if isPlay and not pause:
-            is_is_PlatformCollide = False
-            for i in platformss:
-                if pygame.sprite.collide_mask(person, i):
-                    person.rect.y = i.rect.y - 63
-                    is_is_PlatformCollide = True
+        if isPlay and not pause and name != '':
+            if person.rect.x >= 0:
+                is_is_PlatformCollide = False
+                for i in platformss:
+                    if pygame.sprite.collide_mask(person, i):
+                        person.rect.y = i.rect.y - 63
+                        is_is_PlatformCollide = True
 
-            if is_Jump:
-                person.image = load_image('Icons/personJump.png')
-                person.image = pygame.transform.scale(person.image, (50, 64))
-                if Jump_count > 0:
-                    person.rect.y -= (Jump_count ** 2) / 2
-                    Jump_count -= 1
-                else:
-                    if Fall_count < 11 and not is_is_PlatformCollide:
-                        person.rect.y += (Fall_count ** 2) / 2
-                        Fall_count += 1
+                if is_Jump:
+                    person.image = load_image('Icons/personJump.png')
+                    person.image = pygame.transform.scale(person.image, (50, 64))
+                    if Jump_count > 0:
+                        person.rect.y -= (Jump_count ** 2) / 2
+                        Jump_count -= 1
                     else:
-                        Jump_count = 10
-                        Fall_count = 0
-                        is_Jump = False
-            else:
-                Jump_count = 10
-                if PlayerAnimCount > 40:
-                    score += 1
-                    PlayerAnimCount = 0
-                if PlayerAnimCount % 10 == 0:
-                    person.AnimationUpdate(PlayerAnimCount // 10)
-                PlayerAnimCount += 1
+                        if Fall_count < 11 and not is_is_PlatformCollide:
+                            person.rect.y += (Fall_count ** 2) / 2
+                            Fall_count += 1
+                        else:
+                            Jump_count = 10
+                            Fall_count = 0
+                            is_Jump = False
+                else:
+                    Jump_count = 10
+                    if PlayerAnimCount > 40:
+                        score += 1
+                        PlayerAnimCount = 0
+                    if PlayerAnimCount % 10 == 0:
+                        person.AnimationUpdate(PlayerAnimCount // 10)
+                    PlayerAnimCount += 1
 
-            if person.rect.y < 273 and not is_is_PlatformCollide and not is_Jump:
-                person.rect.y += (Fall_count ** 2) / 2
-                Fall_count += 1
+                if person.rect.y < 273 and not is_is_PlatformCollide and not is_Jump:
+                    person.rect.y += (Fall_count ** 2) / 2
+                    Fall_count += 1
 
-            if person.rect.y >= 273:
-                person.rect.y = 273
-                is_Jump = False
-                Fall_count = 0
+                if person.rect.y >= 273:
+                    person.rect.y = 273
+                    is_Jump = False
+                    Fall_count = 0
 
-            bg1.draw()
-            bg2.draw()
-            bg3.draw()
-            bg1.Moving()
-            bg2.Moving()
-            bg3.Moving()
+                bg1.draw()
+                bg2.draw()
+                bg3.draw()
+                bg1.Moving()
+                bg2.Moving()
+                bg3.Moving()
 
-            bb1.draw()
-            bb2.draw()
-            bb3.draw()
-            bb1.Moving()
-            bb2.Moving()
-            bb3.Moving()
+                bb1.draw()
+                bb2.draw()
+                bb3.draw()
+                bb1.Moving()
+                bb2.Moving()
+                bb3.Moving()
 
-            for i in platformss:
-                i.draw()
-
-            for i in platformss:
-                i.Moving()
-                if i.x <= i.DiedX:
-                    del platformss[platformss.index(i)]
-                    break
-                if i.step == i.n + (options.index(selected_option) + 1) * 5:
-                    platformss.append(Platforms())
-
-            for i in all_money:
-                i.draw()
-
-            for i in all_money:
-                i.Moving()
-                if i.x <= i.DiedX or i.Collid:
-                    del all_money[all_money.index(i)]
-                    break
-                if i.step == 30:
-                    all_money.append(Money())
-
-            collis = False
-            for i in all_Die_sprites:
-                if i:
+                for i in platformss:
                     i.draw()
+
+                for i in platformss:
                     i.Moving()
-            if collis:
+                    if i.x <= i.DiedX:
+                        del platformss[platformss.index(i)]
+                        break
+                    if i.step == i.n + (options.index(selected_option) + 1) * 5:
+                        platformss.append(Platforms())
+
+                for i in all_money:
+                    i.draw()
+
+                for i in all_money:
+                    i.Moving()
+                    if i.x <= i.DiedX or i.Collid:
+                        del all_money[all_money.index(i)]
+                        break
+                    if i.step == 30:
+                        all_money.append(Money())
+
+                collis = False
                 for i in all_Die_sprites:
-                    i.Die()
+                    if i:
+                        i.draw()
+                        i.Moving()
+                if collis:
+                    for i in all_Die_sprites:
+                        i.Die()
 
-            Turba.draw()
-            Turba.Moving()
-            person.draw()
+                Turba.draw()
+                Turba.Moving()
+                person.draw()
 
-            draw_text(screen, f"Очки: {score}", 5, 10)
-            draw_text(screen, f"Деньги: {money}", 200, 10)
+                draw_text(screen, f"Метры: {score}", 5, 10)
+                draw_text(screen, f"Деньги: {money}", 200, 10)
 
-            if not isPlayClick and not isBestScoreTable and not isPlay:
-                play_button.draw(screen, WHITE)
-                leader_button.draw(screen, WHITE)
-                exit_button.draw(screen, WHITE)
+                if not isPlayClick and not isBestScoreTable and not isPlay:
+                    play_button.draw(screen, WHITE)
+                    leader_button.draw(screen, WHITE)
+                    exit_button.draw(screen, WHITE)
+                else:
+                    BackBtn.draw(screen, WHITE)
+
+                pygame.display.flip()
+                clock.tick(FPS)
             else:
+                screen.fill(BLACK)
+                draw_text(screen, 'Game Over', 400, 25)
+                draw_text(screen, f'Метров пройдено: {score}', 400, 100)
+                draw_text(screen, f'Собрано денег: {money}', 400, 150)
+                draw_text(screen, f'Бонус за уровень сложности: {options.index(selected_option) * 10}', 400, 200)
+                draw_text(screen, f'Итого: {money + score + (options.index(selected_option) * 10)} очков', 400, 325)
+                EndGame = True
                 RemakeBTN.draw(screen, WHITE)
 
-            pygame.display.flip()
-            clock.tick(FPS)
     pygame.quit()
 
 game()
