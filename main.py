@@ -344,12 +344,75 @@ class Money(Animated, Mov, pygame.sprite.Sprite):
             self.Collid = True
             self.Die()
         self.AnimCount += 1
-        if self.AnimCount > 40:
+        if self.AnimCount > 50:
             self.AnimCount = 0
         if self.AnimCount % 10 == 0:
             self.AnimationUpdate(self.AnimCount // 10)
 
 
+class Card(Animated, Mov, pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.animList = ['Icons/Card.png', 'Icons/Card2.png', 'Icons/Card3.png', 'Icons/Card4.png', 'Icons/Card5.png', 'Icons/Card6.png', 'Icons/Card7.png', 'Icons/Card8.png']
+        self.Collid = False
+        self.AnimCount = 0
+        self.y = randint(150, 280)
+        self.x = 2000
+        self.DiedX = -130
+        self.image = load_image(self.animList[0])
+        self.image = pygame.transform.scale(self.image, (24, 24))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = Rect(self.x, self.y, 24, 24)
+
+    def Die(self):
+        self.rect.x = 2000
+        self.y = randint(150, 280)
+
+    def draw(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        if pygame.sprite.collide_mask(self, person):
+            global OpenTheDoors
+            OpenTheDoors = True
+            self.Collid = True
+            self.Die()
+        self.AnimCount += 1
+        if self.AnimCount > 70:
+            self.AnimCount = 0
+        if self.AnimCount % 10 == 0:
+            self.AnimationUpdate(self.AnimCount // 10)
+
+
+class Door(Animated, Mov, pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.animList = ['Icons/Entry.png', 'Icons/Entry2.png', 'Icons/Entry3.png', 'Icons/Entry4.png', 'Icons/Entry5.png']
+        self.AnimCount = 0
+        self.y = 62
+        self.x = 2500
+        self.DiedX = -130
+        self.image = load_image(self.animList[0])
+        self.image = pygame.transform.scale(self.image, (128, 274))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = Rect(self.x, self.y, 128, 274)
+        self.MasterCard = Card()
+
+    def Die(self):
+        self.rect.x = randint(2500, 4000)
+        self.AnimCount = 0
+
+    def draw(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        self.MasterCard.draw()
+        self.MasterCard.Moving()
+        if pygame.sprite.collide_mask(self, person) and self.AnimCount < 40:
+            person.rect.x -= 100
+            self.Die()
+        if self.MasterCard.Collid:
+            if self.AnimCount < 40:
+                self.AnimCount += 1
+            if self.AnimCount % 10 == 0:
+                self.AnimationUpdate(self.AnimCount // 10)
+                self.image = pygame.transform.scale(self.image, (128, 274))
 
 screen = None
 platformss = None
@@ -366,6 +429,8 @@ score = 0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 name = ''
+OpenTheDoors = False
+door = None
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -385,7 +450,7 @@ def draw_selector():
 
 def game():
     global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, collis, \
-        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name
+        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name, door
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -520,6 +585,7 @@ def game():
             Turba = Truba()
             person = Person()
             enemy = Enemy()
+            door = Door()
             bul = Bullet('lazer', -10, 250)
             all_Die_sprites = [enemy, bul]
             platformss = [Platforms()]
@@ -620,6 +686,9 @@ def game():
                 Turba.draw()
                 Turba.Moving()
                 person.draw()
+
+                door.draw()
+                door.Moving()
 
                 draw_text(screen, f"Метры: {score}", 5, 10)
                 draw_text(screen, f"Деньги: {money}", 200, 10)
