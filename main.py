@@ -37,13 +37,13 @@ class Mov(pygame.sprite.Sprite):
         self.DiedX = -200
         self.rect = Rect(0, 0, 1, 1)
         if selected_option == 'Легкая сложность':
-            self.speed = 8
+            self.speed = 5
         elif selected_option == 'Нормальная сложность':
-            self.speed = 15
+            self.speed = 10
         elif selected_option == 'Сложная сложность':
-            self.speed = 20
+            self.speed = 15
         elif selected_option == 'Non real':
-            self.speed = 30
+            self.speed = 20
         self.step = 0
 
     def Die(self):
@@ -111,12 +111,22 @@ class Truba(Mov, pygame.sprite.Sprite):
         if pygame.sprite.collide_mask(barrier, person):
             global collis
             collis = True
-            person.rect.x -= 100
-            barrier.rect.x = self.rect.x
-            barrier.rect.y = self.rect.y
+            if not barrier.pls:
+                person.rect.x -= 100
+                barrier.rect.x = self.rect.x
+                barrier.rect.y = self.rect.y
+            else:
+                barrier.rect.x = 3000
+                person.rect.x += 100
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
             BoxInTrubaSound.play()
+
+        if barrier.delete:
+            barrier.image = load_image('Icons/plus.png')
+            barrier.image = pygame.transform.scale(self.image, (42, 42))
+            barrier.delete = False
+            barrier.pls = True
 
         if self.rect.x < self.DiedX:
             self.Die()
@@ -130,6 +140,8 @@ class Barrier(Mov, pygame.sprite.Sprite):
         self.endY = 296
         self.type = tp
         self.DiedX = -200
+        self.delete = False
+        self.pls = False
         self.image = load_image(choice(self.type))
         self.image = pygame.transform.scale(self.image, (42, 42))
         self.count = 0
@@ -139,9 +151,9 @@ class Barrier(Mov, pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         for i in platformss:
             if self.rect.y < self.endY and not pygame.sprite.collide_mask(self, i):
-                self.rect.y += 1
-            if pygame.sprite.collide_mask(self, i):
-                self.endY = i.rect.y - 46
+                self.rect.y += 0.5
+            else:
+                self.delete = True
         self.count += 1
 
 
@@ -234,7 +246,6 @@ class Enemy(Mov, pygame.sprite.Sprite):
             self.Die()
             global collis
             collis = True
-            person.rect.x -= 100
         if person.rect.y == self.rect.y:
             self.Fire()
 
