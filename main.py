@@ -1,8 +1,7 @@
 import os
 import sys
 from operator import itemgetter
-from random import randint
-
+from random import randint, choice
 import pygame
 from pygame import *
 
@@ -82,6 +81,8 @@ class Truba(Mov, pygame.sprite.Sprite):
         global barrier
         barrier.rect.x = self.rect.x
         barrier.rect.y = self.rect.y
+        barrier.image = load_image(choice(barrier.type))
+        barrier.image = pygame.transform.scale(barrier.image, (42, 42))
         barrier.endY = 296
 
     def draw(self):
@@ -89,7 +90,11 @@ class Truba(Mov, pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         if self.rect.x <= 1000 and self.count_box == 1:
             self.count_box = 0
-            barrier = Barrier(self.rect.x - 10, 150, ['Icons/Box1.png'])
+            barrier = Barrier(self.rect.x - 10, 150, ['Icons/Barrel1.png', 'Icons/Barrel2.png', 'Icons/Barrel3.png',
+                                                      'Icons/Box1.png', 'Icons/Box2.png', 'Icons/Box3.png',
+                                                      'Icons/Box4.png', 'Icons/Box5.png',
+                                                      'Icons/Box6.png', 'Icons/Box8.png',
+                                                      'Icons/Pointer1.png', 'Icons/Pointer2.png'])
 
         if barrier:
             barrier.draw()
@@ -98,6 +103,8 @@ class Truba(Mov, pygame.sprite.Sprite):
         if barrier.rect.x <= barrier.DiedX:
             barrier.rect.x = self.rect.x
             barrier.rect.y = self.rect.y
+            barrier.image = load_image(choice(barrier.type))
+            barrier.image = pygame.transform.scale(barrier.image, (42, 42))
 
         if pygame.sprite.collide_mask(barrier, person):
             global collis
@@ -105,6 +112,8 @@ class Truba(Mov, pygame.sprite.Sprite):
             person.rect.x -= 100
             barrier.rect.x = self.rect.x
             barrier.rect.y = self.rect.y
+            barrier.image = load_image(choice(barrier.type))
+            barrier.image = pygame.transform.scale(barrier.image, (42, 42))
 
         if self.rect.x < self.DiedX:
             self.Die()
@@ -118,7 +127,7 @@ class Barrier(Mov, pygame.sprite.Sprite):
         self.endY = 296
         self.type = tp
         self.DiedX = -200
-        self.image = load_image(self.type[0])
+        self.image = load_image(choice(self.type))
         self.image = pygame.transform.scale(self.image, (42, 42))
         self.count = 0
         self.rect = Rect(self.x, self.y, 42, 42)
@@ -399,6 +408,11 @@ class Door(Animated, Mov, pygame.sprite.Sprite):
     def Die(self):
         self.rect.x = randint(2500, 4000)
         self.AnimCount = 0
+        self.image = load_image(self.animList[0])
+        self.image = pygame.transform.scale(self.image, (128, 274))
+        self.MasterCard.Collid = False
+        global OpenTheDoors
+        OpenTheDoors = False
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
