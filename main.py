@@ -445,6 +445,14 @@ BLACK = (0, 0, 0)
 name = ''
 OpenTheDoors = False
 door = None
+musikDisk = ["Sounds/loonboon.mp3", "Sounds/Ken.mp3"]
+vol = 1
+
+pygame.mixer.init()
+pygame.mixer.music.load(choice(musikDisk))
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(vol)
+pygame.mixer.music.pause()
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -464,7 +472,7 @@ def draw_selector():
 
 def game():
     global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, collis, \
-        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name, door
+        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name, door, vol
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -583,6 +591,12 @@ def game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
+                elif event.key == pygame.K_LEFT:
+                    vol -= 0.1
+                    pygame.mixer.music.set_volume(vol)
+                elif event.key == pygame.K_RIGHT:
+                    vol += 0.1
+                    pygame.mixer.music.set_volume(vol)
                 else:
                     if len(name) <= 4:
                         name += event.unicode
@@ -614,6 +628,8 @@ def game():
 
         if isPlay and not pause and name != '':
             if person.rect.x >= 0:
+                EndGame = False
+                pygame.mixer.music.unpause()
                 is_is_PlatformCollide = False
                 for i in platformss:
                     if pygame.sprite.collide_mask(person, i):
@@ -725,6 +741,10 @@ def game():
                 draw_text(screen, f'Итого: {money + score + (options.index(selected_option) * 10)} очков', 400, 325)
                 EndGame = True
                 RemakeBTN.draw(screen, WHITE)
+                pygame.mixer.music.pause()
+                pygame.mixer.music.rewind()
+        else:
+            pygame.mixer.music.pause()
 
     pygame.quit()
 
