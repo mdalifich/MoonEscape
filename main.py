@@ -84,7 +84,8 @@ class Truba(Mov, pygame.sprite.Sprite):
         barrier.rect.y = self.rect.y
         barrier.image = load_image(choice(barrier.type))
         barrier.image = pygame.transform.scale(barrier.image, (42, 42))
-        BoxInTrubaSound.play()
+        barrier.pls = False
+        #BoxInTrubaSound.play()
         barrier.endY = 296
 
     def draw(self):
@@ -107,7 +108,9 @@ class Truba(Mov, pygame.sprite.Sprite):
             barrier.rect.y = self.rect.y
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
-            BoxInTrubaSound.play()
+            barrier.Vect = 0.5
+            barrier.pls = False
+            #BoxInTrubaSound.play()
 
         if pygame.sprite.collide_mask(barrier, person):
             global collis
@@ -116,18 +119,12 @@ class Truba(Mov, pygame.sprite.Sprite):
                 person.rect.x -= 100
                 barrier.rect.x = self.rect.x
                 barrier.rect.y = self.rect.y
-            else:
-                barrier.rect.x = 3000
-                person.rect.x += 100
+
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
-            BoxInTrubaSound.play()
-
-        if barrier.delete:
-            barrier.image = load_image('Icons/plus.png')
-            barrier.image = pygame.transform.scale(self.image, (42, 42))
-            barrier.delete = False
-            barrier.pls = True
+            barrier.Vect = 0.5
+            barrier.pls = False
+            #BoxInTrubaSound.play()
 
         if self.rect.x < self.DiedX:
             self.Die()
@@ -146,16 +143,32 @@ class Barrier(Mov, pygame.sprite.Sprite):
         self.image = load_image(choice(self.type))
         self.image = pygame.transform.scale(self.image, (42, 42))
         self.count = 0
+        self.Vect = 0.5
         self.rect = Rect(self.x, self.y, 42, 42)
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
+
         for i in platformss:
             if self.rect.y < self.endY and not pygame.sprite.collide_mask(self, i):
-                self.rect.y += 0.5
+                self.rect.y += self.Vect
             else:
                 self.delete = True
+                self.Vect = 0
         self.count += 1
+
+        if self.delete:
+            barrier.image = load_image('Icons/plus.png')
+            barrier.image = pygame.transform.scale(self.image, (42, 42))
+            barrier.delete = False
+            barrier.pls = True
+
+        if pygame.sprite.collide_mask(self, person) and self.pls:
+            person.rect.x += 100
+            self.rect.x = 3000
+            self.rect.y = -1000
+            self.Vect = 0.5
+            barrier.pls = False
 
 
 class Person(Animated, pygame.sprite.Sprite):
