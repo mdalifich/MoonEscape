@@ -4,6 +4,7 @@ from operator import itemgetter
 from random import randint, choice
 import pygame
 from pygame import *
+import sqlite3
 
 
 def draw_text(wind, text, x, y):
@@ -83,7 +84,7 @@ class Truba(Mov, pygame.sprite.Sprite):
         barrier.rect.y = self.rect.y
         barrier.image = load_image(choice(barrier.type))
         barrier.image = pygame.transform.scale(barrier.image, (42, 42))
-        BoxInTrubaSound.play()
+        barrier.pls = False
         barrier.endY = 296
 
     def draw(self):
@@ -106,7 +107,8 @@ class Truba(Mov, pygame.sprite.Sprite):
             barrier.rect.y = self.rect.y
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
-            BoxInTrubaSound.play()
+            barrier.Vect = 0.5
+            barrier.pls = False
 
         if pygame.sprite.collide_mask(barrier, person):
             global collis
@@ -115,19 +117,11 @@ class Truba(Mov, pygame.sprite.Sprite):
                 person.rect.x -= 100
                 barrier.rect.x = self.rect.x
                 barrier.rect.y = self.rect.y
-            else:
-                barrier.rect.x = 3000
-                person.rect.x += 100
+
             barrier.image = load_image(choice(barrier.type))
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
-            BoxInTrubaSound.play()
-
-        if barrier.delete:
-            barrier.image = load_image('Icons/plus.png')
-            barrier.image = pygame.transform.scale(self.image, (42, 42))
-            barrier.delete = False
-            barrier.pls = True
-
+            barrier.Vect = 0.5
+            barrier.pls = False
         if self.rect.x < self.DiedX:
             self.Die()
             self.count_box = 1
@@ -145,16 +139,33 @@ class Barrier(Mov, pygame.sprite.Sprite):
         self.image = load_image(choice(self.type))
         self.image = pygame.transform.scale(self.image, (42, 42))
         self.count = 0
+        self.Vect = 0.5
         self.rect = Rect(self.x, self.y, 42, 42)
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
+
         for i in platformss:
             if self.rect.y < self.endY and not pygame.sprite.collide_mask(self, i):
-                self.rect.y += 0.5
+                self.rect.y += self.Vect
             else:
                 self.delete = True
+                self.Vect = 0
         self.count += 1
+
+        if self.delete:
+            barrier.image = load_image('Icons/plus.png')
+            barrier.image = pygame.transform.scale(self.image, (42, 42))
+            barrier.delete = False
+            barrier.pls = True
+
+        if pygame.sprite.collide_mask(self, person) and self.pls:
+            if person.rect.x < 400:
+                person.rect.x += 100
+            self.rect.x = 3000
+            self.rect.y = -1000
+            self.Vect = 0.5
+            barrier.pls = False
 
 
 class Person(Animated, pygame.sprite.Sprite):
@@ -303,7 +314,7 @@ class Platforms(Mov, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        self.DiedX = -130
+        self.DiedX = -2405
         self.image = load_image('Icons/platform.png').convert_alpha()
         self.n = randint(15, 80)
         self.mask = pygame.mask.from_surface(self.image)
@@ -443,6 +454,7 @@ class Door(Animated, Mov, pygame.sprite.Sprite):
                 self.AnimationUpdate(self.AnimCount // 10)
                 self.image = pygame.transform.scale(self.image, (128, 274))
 
+DB_NAME = 'moon_escape.sqlite'
 screen = None
 platformss = None
 all_money = None
@@ -462,6 +474,7 @@ OpenTheDoors = False
 door = None
 musikDisk = ["Sounds/loonboon.mp3", "Sounds/Ken.mp3"]
 vol = 0.5
+flag_game_over = 0
 
 pygame.mixer.pre_init(44100, -16, 1, 512)
 
@@ -471,10 +484,8 @@ pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(vol)
 pygame.mixer.music.pause()
 
-stepSound = pygame.mixer.Sound('Sounds/step.mp3')
 lazerSound = pygame.mixer.Sound('Sounds/Lazer.mp3')
 clickSound = pygame.mixer.Sound('Sounds/Click.mp3')
-BoxInTrubaSound = pygame.mixer.Sound('Sounds/BoxInTruba.mp3')
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -494,7 +505,7 @@ def draw_selector():
 
 def game():
     global score, screen, enemy, barrier, bul, platformss, WHITE, BLACK, selected_option, person, collis, \
-        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name, door, vol
+        Turba, is_is_PlatformCollide, Fall_count, money, all_money, name, door, vol, flag_game_over
     flag = True
     pygame.init()
     pygame.display.set_caption('Moon Escape')
@@ -505,11 +516,15 @@ def game():
     is_Jump = False
     Jump_count = 10
 
+    flag_game_over = 0
+
     input_rect = pygame.Rect(200, 200, 140, 32)
     color_active = pygame.Color('lightskyblue3')
     color_passive = pygame.Color('chartreuse4')
     color = color_passive
     active = False
+
+    sqlite = sqlite3.connect(DB_NAME)
 
     size = width, height = 1000, 400
     screen = pygame.display.set_mode(size)
@@ -545,13 +560,17 @@ def game():
             draw_selector()
 
         if isBestScoreTable:
+            cur = sqlite.cursor()
+            cur.execute('SELECT * FROM result')
+            sp = cur.fetchall()
             draw_text(screen, 'Топ 5', 440, 20)
             k = 1
-            sp = [['fasf', 403], ['fagfff', 63], ['asfgsf', 103], ['ARTUR', 1000]]
-            sp_right = sorted(sp, key=itemgetter(1), reverse=True)
-            for i in range(len(sp)):
-                draw_text(screen, f'{sp_right[i][0]} — Количество очков {sp_right[i][1]}', 200, 40 + k * 35)
+            sp_right = sorted(sp, key=itemgetter(2), reverse=True)
+            for i in range(len(sp_right)):
+                draw_text(screen, f'{k}.{sp_right[i][1]} — Количество очков {sp_right[i][2]}', 200, 40 + k * 35)
                 k += 1
+                if k > 5:
+                    break
 
         if not isPlayClick and not isBestScoreTable and not isPlay:
             play_button.draw(screen, WHITE)
@@ -584,7 +603,7 @@ def game():
                 pause = not pause
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                clickSound.play()
+
                 if RemakeBTN.is_over(pos) and EndGame:
                     reset = True
                 if not isPlay:
@@ -596,17 +615,22 @@ def game():
                     # Проверка нажатия кнопок
                     if not isPlay and not isPlayClick:
                         if play_button.is_over(pos):
+                            clickSound.play()
                             isPlayClick = True
                         if leader_button.is_over(pos):
+                            clickSound.play()
                             isBestScoreTable = True
                         if exit_button.is_over(pos):
+                            clickSound.play()
                             running = False
                     if isPlayClick:
                         if OkBTN.is_over(pos):
                             if selected_option is not None:
+                                clickSound.play()
                                 isPlay = True
                                 isPlayClick = False
                 if BackBtn.is_over(pos):
+                    clickSound.play()
                     isBestScoreTable = False
                     isPlayClick = False
                     isPlay = False
@@ -678,7 +702,6 @@ def game():
                     if PlayerAnimCount > 40:
                         score += 1
                         PlayerAnimCount = 0
-                        stepSound.play()
                     if PlayerAnimCount % 10 == 0:
                         person.AnimationUpdate(PlayerAnimCount // 10)
                     PlayerAnimCount += 1
@@ -764,9 +787,16 @@ def game():
                 draw_text(screen, f'Бонус за уровень сложности: {options.index(selected_option) * 10}', 400, 200)
                 draw_text(screen, f'Итого: {money + score + (options.index(selected_option) * 10)} очков', 400, 325)
                 EndGame = True
+                flag_game_over += 1
                 RemakeBTN.draw(screen, WHITE)
                 pygame.mixer.music.pause()
                 pygame.mixer.music.rewind()
+                if flag_game_over == 1:
+                    cur = sqlite.cursor()
+                    res = f'INSERT INTO result (name, score) VALUES("{name}", {money + score + (options.index(selected_option) * 10)})'
+                    cur.execute(res)
+                    sqlite.commit()
+                    cur.close()
         else:
             pygame.mixer.music.pause()
 
