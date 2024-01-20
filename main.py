@@ -216,6 +216,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.rect.x = enemy.rect.x
         self.rect.y = enemy.rect.y + 20
         lazerSound.play()
+        print('lazer')
 
     def Moving(self):
         self.rect.x -= self.speed + 10
@@ -362,7 +363,7 @@ class Money(Animated, Mov, pygame.sprite.Sprite):
         self.AnimCount = 0
         self.y = randint(150, 280)
         self.x = 1000
-        self.DiedX = -130
+        self.DiedX = -2405
         self.image = load_image(self.animList[0])
         self.image = pygame.transform.scale(self.image, (24, 24))
         self.mask = pygame.mask.from_surface(self.image)
@@ -400,7 +401,10 @@ class Card(Animated, Mov, pygame.sprite.Sprite):
         self.rect = Rect(self.x, self.y, 24, 24)
 
     def Die(self):
-        self.rect.x = 2000
+        global OpenTheDoors, door
+        if not OpenTheDoors or door.die:
+            self.rect.x = door.rect.x - 250
+            door.die = False
         self.y = randint(150, 280)
 
     def draw(self):
@@ -424,6 +428,7 @@ class Door(Animated, Mov, pygame.sprite.Sprite):
         self.AnimCount = 0
         self.y = 62
         self.x = 2500
+        self.die = False
         self.DiedX = -130
         self.image = load_image(self.animList[0])
         self.image = pygame.transform.scale(self.image, (128, 274))
@@ -439,6 +444,7 @@ class Door(Animated, Mov, pygame.sprite.Sprite):
         self.MasterCard.Collid = False
         global OpenTheDoors
         OpenTheDoors = False
+        self.die = True
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -543,6 +549,7 @@ def game():
     EndGame = False
 
     while running:
+        print('Цикл')
         if not isPlay and not isPlayClick:
             screen.fill(BLACK)
 
@@ -614,7 +621,7 @@ def game():
                             reset = True
                     # Проверка нажатия кнопок
                     if not isPlay and not isPlayClick:
-                        if play_button.is_over(pos):
+                        if play_button.is_over(pos) and name != '':
                             clickSound.play()
                             isPlayClick = True
                         if leader_button.is_over(pos):
@@ -734,7 +741,7 @@ def game():
 
                 for i in platformss:
                     i.Moving()
-                    if i.x <= i.DiedX:
+                    if i.x <= -2400:
                         del platformss[platformss.index(i)]
                         break
                     if i.step == i.n + (options.index(selected_option) + 1) * 5:
@@ -745,7 +752,7 @@ def game():
 
                 for i in all_money:
                     i.Moving()
-                    if i.x <= i.DiedX or i.Collid:
+                    if i.x <= -2400 or i.Collid:
                         del all_money[all_money.index(i)]
                         break
                     if i.step == 30:
@@ -757,8 +764,7 @@ def game():
                         i.draw()
                         i.Moving()
                 if collis:
-                    for i in all_Die_sprites:
-                        i.Die()
+                    pass
 
                 Turba.draw()
                 Turba.Moving()
