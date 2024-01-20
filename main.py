@@ -85,7 +85,6 @@ class Truba(Mov, pygame.sprite.Sprite):
         barrier.image = load_image(choice(barrier.type))
         barrier.image = pygame.transform.scale(barrier.image, (42, 42))
         barrier.pls = False
-        #BoxInTrubaSound.play()
         barrier.endY = 296
 
     def draw(self):
@@ -110,7 +109,6 @@ class Truba(Mov, pygame.sprite.Sprite):
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
             barrier.Vect = 0.5
             barrier.pls = False
-            #BoxInTrubaSound.play()
 
         if pygame.sprite.collide_mask(barrier, person):
             global collis
@@ -124,8 +122,6 @@ class Truba(Mov, pygame.sprite.Sprite):
             barrier.image = pygame.transform.scale(barrier.image, (42, 42))
             barrier.Vect = 0.5
             barrier.pls = False
-            #BoxInTrubaSound.play()
-
         if self.rect.x < self.DiedX:
             self.Die()
             self.count_box = 1
@@ -164,7 +160,8 @@ class Barrier(Mov, pygame.sprite.Sprite):
             barrier.pls = True
 
         if pygame.sprite.collide_mask(self, person) and self.pls:
-            person.rect.x += 100
+            if person.rect.x < 400:
+                person.rect.x += 100
             self.rect.x = 3000
             self.rect.y = -1000
             self.Vect = 0.5
@@ -219,6 +216,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         self.rect.x = enemy.rect.x
         self.rect.y = enemy.rect.y + 20
         lazerSound.play()
+        print('lazer')
 
     def Moving(self):
         self.rect.x -= self.speed + 10
@@ -317,7 +315,7 @@ class Platforms(Mov, pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        self.DiedX = -130
+        self.DiedX = -2405
         self.image = load_image('Icons/platform.png').convert_alpha()
         self.n = randint(15, 80)
         self.mask = pygame.mask.from_surface(self.image)
@@ -365,7 +363,7 @@ class Money(Animated, Mov, pygame.sprite.Sprite):
         self.AnimCount = 0
         self.y = randint(150, 280)
         self.x = 1000
-        self.DiedX = -130
+        self.DiedX = -2405
         self.image = load_image(self.animList[0])
         self.image = pygame.transform.scale(self.image, (24, 24))
         self.mask = pygame.mask.from_surface(self.image)
@@ -403,7 +401,10 @@ class Card(Animated, Mov, pygame.sprite.Sprite):
         self.rect = Rect(self.x, self.y, 24, 24)
 
     def Die(self):
-        self.rect.x = 2000
+        global OpenTheDoors, door
+        if not OpenTheDoors or door.die:
+            self.rect.x = door.rect.x - 250
+            door.die = False
         self.y = randint(150, 280)
 
     def draw(self):
@@ -427,6 +428,7 @@ class Door(Animated, Mov, pygame.sprite.Sprite):
         self.AnimCount = 0
         self.y = 62
         self.x = 2500
+        self.die = False
         self.DiedX = -130
         self.image = load_image(self.animList[0])
         self.image = pygame.transform.scale(self.image, (128, 274))
@@ -442,6 +444,7 @@ class Door(Animated, Mov, pygame.sprite.Sprite):
         self.MasterCard.Collid = False
         global OpenTheDoors
         OpenTheDoors = False
+        self.die = True
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -487,10 +490,8 @@ pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(vol)
 pygame.mixer.music.pause()
 
-stepSound = pygame.mixer.Sound('Sounds/step.mp3')
 lazerSound = pygame.mixer.Sound('Sounds/Lazer.mp3')
 clickSound = pygame.mixer.Sound('Sounds/Click.mp3')
-BoxInTrubaSound = pygame.mixer.Sound('Sounds/BoxInTruba.mp3')
 
 options = ['Легкая сложность', 'Нормальная сложность', 'Сложная сложность', 'Non real']
 selected_option = None
@@ -548,6 +549,7 @@ def game():
     EndGame = False
 
     while running:
+        print('Цикл')
         if not isPlay and not isPlayClick:
             screen.fill(BLACK)
 
@@ -571,7 +573,6 @@ def game():
             draw_text(screen, 'Топ 5', 440, 20)
             k = 1
             sp_right = sorted(sp, key=itemgetter(2), reverse=True)
-            print(sp_right)
             for i in range(len(sp_right)):
                 draw_text(screen, f'{k}.{sp_right[i][1]} — Количество очков {sp_right[i][2]}', 200, 40 + k * 35)
                 k += 1
@@ -609,7 +610,7 @@ def game():
                 pause = not pause
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                clickSound.play()
+
                 if RemakeBTN.is_over(pos) and EndGame:
                     reset = True
                 if not isPlay:
@@ -620,18 +621,23 @@ def game():
                             reset = True
                     # Проверка нажатия кнопок
                     if not isPlay and not isPlayClick:
-                        if play_button.is_over(pos):
+                        if play_button.is_over(pos) and name != '':
+                            clickSound.play()
                             isPlayClick = True
                         if leader_button.is_over(pos):
+                            clickSound.play()
                             isBestScoreTable = True
                         if exit_button.is_over(pos):
+                            clickSound.play()
                             running = False
                     if isPlayClick:
                         if OkBTN.is_over(pos):
                             if selected_option is not None:
+                                clickSound.play()
                                 isPlay = True
                                 isPlayClick = False
                 if BackBtn.is_over(pos):
+                    clickSound.play()
                     isBestScoreTable = False
                     isPlayClick = False
                     isPlay = False
@@ -703,7 +709,6 @@ def game():
                     if PlayerAnimCount > 40:
                         score += 1
                         PlayerAnimCount = 0
-                        stepSound.play()
                     if PlayerAnimCount % 10 == 0:
                         person.AnimationUpdate(PlayerAnimCount // 10)
                     PlayerAnimCount += 1
@@ -736,7 +741,7 @@ def game():
 
                 for i in platformss:
                     i.Moving()
-                    if i.x <= i.DiedX:
+                    if i.x <= -2400:
                         del platformss[platformss.index(i)]
                         break
                     if i.step == i.n + (options.index(selected_option) + 1) * 5:
@@ -747,7 +752,7 @@ def game():
 
                 for i in all_money:
                     i.Moving()
-                    if i.x <= i.DiedX or i.Collid:
+                    if i.x <= -2400 or i.Collid:
                         del all_money[all_money.index(i)]
                         break
                     if i.step == 30:
@@ -759,8 +764,7 @@ def game():
                         i.draw()
                         i.Moving()
                 if collis:
-                    for i in all_Die_sprites:
-                        i.Die()
+                    pass
 
                 Turba.draw()
                 Turba.Moving()
