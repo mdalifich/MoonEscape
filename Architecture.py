@@ -8,11 +8,11 @@ from MatClasses import *
 
 
 class Background(Mov, pygame.sprite.Sprite):
-    def __init__(self, x, y, screen, sel):
+    def __init__(self, x, y, screen, sel, icon):
         super().__init__()
         self.x, self.y = x, y
         self.DiedX = -1000
-        self.image = load_image('Icons/BackGround.png')
+        self.image = load_image(icon) #'Icons/BackGround.png')
         self.rect = Rect(self.x, self.y, 1000, 400)
         self.selected_option = sel
         self.screen = screen
@@ -26,15 +26,17 @@ class Background(Mov, pygame.sprite.Sprite):
 
 
 class BB(Mov, pygame.sprite.Sprite):
-    def __init__(self, x, y, opt, screen):
+    def __init__(self, x, y, opt, screen, icon):
         super().__init__()
         self.x, self.y = x, y
         self.speed = 1
         self.DiedX = -1000
         self.selected_option = opt
-        self.iconList = {'Легкая сложность': 'Icons/BBackground.png', 'Нормальная сложность': 'Icons/fon2.png',
-                         'Сложная сложность': 'Icons/fon3.png', 'Non real': 'Icons/Fon1.png'}
-        self.image = load_image(self.iconList[self.selected_option])
+        self.iconList = icon # {'Легкая сложность': 'Icons/BBackground.png', 'Нормальная сложность': 'Icons/fon2.png', 'Сложная сложность': 'Icons/fon3.png', 'Non real': 'Icons/Fon1.png'}
+        if icon == 'Icons/fonKolobok.png':
+            self.image = load_image(self.iconList)
+        else:
+            self.image = load_image(self.iconList[self.selected_option])
         self.rect = Rect(self.x, self.y, 1000, 274)
         self.screen = screen
 
@@ -51,11 +53,11 @@ class BB(Mov, pygame.sprite.Sprite):
 
 
 class Platforms(Mov, pygame.sprite.Sprite):
-    def __init__(self, screen, sel):
+    def __init__(self, screen, sel, icon):
         super().__init__()
 
         self.DiedX = -2405
-        self.image = load_image('Icons/platform.png').convert_alpha()
+        self.image = load_image(icon) #'Icons/platform.png').convert_alpha()
         self.n = randint(15, 80)
         self.mask = pygame.mask.from_surface(self.image)
         self.y = randint(150, 250)

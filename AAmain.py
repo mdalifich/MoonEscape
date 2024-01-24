@@ -27,8 +27,8 @@ def draw_selector():
     for indx, option in enumerate(options):
         Rct = pygame.Rect(50, 50 + indx * 50, 290, 40)
         pygame.draw.rect(screen, WHITE, Rct)
-        pygame.draw.rect(screen, BLACK, Rct, 2)
-        text = FNT.render(option, True, BLACK)
+        pygame.draw.rect(screen, NowColor, Rct, 2)
+        text = FNT.render(option, True, NowColor)
         text_rect = text.get_rect(center=Rct.center)
         screen.blit(text, text_rect)
 
@@ -49,6 +49,8 @@ PlayerAnimCount = 0
 is_Jump = False
 Jump_count = 10
 
+IconsList = {True: {'Enemy': 'Icons/EnemyKolobok.png', 'BG': 'Icons/PolKolobok.png', 'Platform': 'Icons/platformKolobok.png', 'Lazer': 'Icons/lazerKolobok.png', 'BB': 'Icons/fonKolobok.png', 'Pers': 'Icons/kolobok.png'},
+             False: {'Pers': ['Icons/person1.png', 'Icons/person2.png', 'Icons/person3.png', 'Icons/person4.png', 'Icons/person5.png'], 'Enemy': 'Icons/enemy.png', 'BG': 'Icons/BackGround.png', 'Platform': 'Icons/platform.png', 'Lazer': 'Icons/lazer.png', 'BB': {'Легкая сложность': 'Icons/BBackground.png', 'Нормальная сложность': 'Icons/fon2.png', 'Сложная сложность': 'Icons/fon3.png', 'Non real': 'Icons/Fon1.png'}}}
 input_rect = pygame.Rect(200, 200, 140, 32)
 color_active = pygame.Color('lightskyblue3')
 color_passive = pygame.Color('chartreuse4')
@@ -75,8 +77,11 @@ money = 0
 Fall_count = 0
 is_is_PlatformCollide = False
 score = 0
+TrueBlack = (0, 0, 0)
+KolobokColor = (66, 170, 255)
+isKolobok = False
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+NowColor = (0, 0, 0)
 name = ''
 OpenTheDoors = False
 door = None
@@ -96,7 +101,7 @@ all_Die_sprites = [enemy, enemy]
 
 while running:
     if not isPlay and not isPlayClick:
-        screen.fill(BLACK)
+        screen.fill(NowColor)
 
     # Создание кнопок и рисование
 
@@ -106,9 +111,10 @@ while running:
     OkBTN = Button('Готово', 400, 50, 200, 50, (0, 255, 0))
     BackBtn = Button('Назад', 50, 350, 200, 50, (0, 255, 0))
     RemakeBTN = Button('Начать заного', 50, 100, 200, 50, (0, 255, 0))
+    KolobokTimeBTN = Button('Режим колобка', 796, 345, 200, 50, (0, 255, 0))
 
     if isPlayClick:
-        screen.fill(BLACK)
+        screen.fill(NowColor)
         draw_selector()
 
     if isBestScoreTable:
@@ -123,6 +129,9 @@ while running:
             k += 1
             if k > 5:
                 break
+
+    if not isPlay:
+        KolobokTimeBTN.draw(screen, WHITE)
 
     if not isPlayClick and not isBestScoreTable and not isPlay:
         play_button.draw(screen, WHITE)
@@ -165,6 +174,14 @@ while running:
 
                         reset = True
                 # Проверка нажатия кнопок
+                if not isPlay:
+                    if KolobokTimeBTN.is_over(pos):
+                        isKolobok = not isKolobok
+                        if isKolobok:
+                            NowColor = KolobokColor
+                        else:
+                            NowColor = TrueBlack
+
                 if not isPlay and not isPlayClick:
                     if play_button.is_over(pos) and name != '':
                         clickSound.play()
@@ -175,12 +192,14 @@ while running:
                     if exit_button.is_over(pos):
                         clickSound.play()
                         running = False
+
                 if isPlayClick:
                     if OkBTN.is_over(pos):
                         if selected_option is not None:
                             clickSound.play()
                             isPlay = True
                             isPlayClick = False
+
             if BackBtn.is_over(pos):
                 clickSound.play()
                 isBestScoreTable = False
@@ -203,18 +222,18 @@ while running:
         pygame.display.update()
 
     if selected_option is not None and flagRes or reset:
-        bg1 = Background(0, 0, screen, selected_option)
-        bg2 = Background(1000, 0, screen, selected_option)
-        bg3 = Background(2000, 0, screen, selected_option)
-        bb1 = BB(0, 63, selected_option, screen)
-        bb2 = BB(1000, 63, selected_option, screen)
-        bb3 = BB(2000, 63, selected_option, screen)
+        bg1 = Background(0, 0, screen, selected_option, IconsList[isKolobok]['BG'])
+        bg2 = Background(1000, 0, screen, selected_option, IconsList[isKolobok]['BG'])
+        bg3 = Background(2000, 0, screen, selected_option, IconsList[isKolobok]['BG'])
+        bb1 = BB(0, 63, selected_option, screen, IconsList[isKolobok]['BB'])
+        bb2 = BB(1000, 63, selected_option, screen, IconsList[isKolobok]['BB'])
+        bb3 = BB(2000, 63, selected_option, screen, IconsList[isKolobok]['BB'])
         Turba = Truba(screen, selected_option)
-        person = Person(screen)
-        enemy = Enemy(screen, selected_option)
+        person = Person(screen, IconsList[isKolobok]['Pers'])
+        enemy = Enemy(screen, selected_option, IconsList[isKolobok]['Enemy'], IconsList[isKolobok]['Lazer'])
         door = Door(screen, selected_option)
-        all_Die_sprites = [enemy, Enemy(screen, selected_option)]
-        platformss = [Platforms(screen, selected_option)]
+        all_Die_sprites = [enemy, Enemy(screen, selected_option, IconsList[isKolobok]['Enemy'], IconsList[isKolobok]['Lazer'])]
+        platformss = [Platforms(screen, selected_option, IconsList[isKolobok]['Platform'])]
         flagRes = False
         reset = False
         Jump_count = 10
@@ -289,7 +308,7 @@ while running:
                     del platformss[platformss.index(i)]
                     break
                 if i.step == i.n + (options.index(selected_option) + 1) * 5:
-                    platformss.append(Platforms(screen, selected_option))
+                    platformss.append(Platforms(screen, selected_option, IconsList[isKolobok]['Platform']))
 
             for i in all_money:
                 i.draw()
@@ -369,7 +388,7 @@ while running:
             pygame.display.flip()
             clock.tick(FPS)
         else:
-            screen.fill(BLACK)
+            screen.fill(NowColor)
             draw_text(screen, 'Game Over', 400, 25)
             draw_text(screen, f'Метров пройдено: {score}', 400, 100)
             draw_text(screen, f'Собрано денег: {money}', 400, 150)

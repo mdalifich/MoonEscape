@@ -125,12 +125,12 @@ class Barrier(Mov, pygame.sprite.Sprite):
 
 
 class Enemy(Mov, pygame.sprite.Sprite):
-    def __init__(self, screen, sel):
+    def __init__(self, screen, sel, icon, bulIcon):
         super().__init__()
         self.Time = 0
         self.hp = 1
         self.DiedX = -200
-        self.image = load_image('Icons/enemy.png')
+        self.image = load_image(icon)#'Icons/enemy.png')
         self.image = pygame.transform.scale(self.image, (42, 64))
         self.mask = pygame.mask.from_surface(self.image)
         self.x = randint(1000, 2000)
