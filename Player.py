@@ -29,7 +29,7 @@ class Person(Animated, pygame.sprite.Sprite):
     def AnimationUpdate(self, i):
         if self.animList == 'Icons/kolobok.png':
             self.image = load_image(self.animList).convert_alpha()
-            self.image = pygame.transform.scale(self.image, self.scale)
+            self.image = pygame.transform.scale(self.image, (64, 64))
         else:
             self.image = load_image(self.animList[i])
             self.image = pygame.transform.scale(self.image, self.scale)

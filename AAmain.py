@@ -49,8 +49,8 @@ PlayerAnimCount = 0
 is_Jump = False
 Jump_count = 10
 
-IconsList = {True: {'Enemy': 'Icons/EnemyKolobok.png', 'BG': 'Icons/PolKolobok.png', 'Platform': 'Icons/platformKolobok.png', 'Lazer': 'Icons/lazerKolobok.png', 'BB': 'Icons/fonKolobok.png', 'Pers': 'Icons/kolobok.png'},
-             False: {'Pers': ['Icons/person1.png', 'Icons/person2.png', 'Icons/person3.png', 'Icons/person4.png', 'Icons/person5.png'], 'Enemy': 'Icons/enemy.png', 'BG': 'Icons/BackGround.png', 'Platform': 'Icons/platform.png', 'Lazer': 'Icons/lazer.png', 'BB': {'Легкая сложность': 'Icons/BBackground.png', 'Нормальная сложность': 'Icons/fon2.png', 'Сложная сложность': 'Icons/fon3.png', 'Non real': 'Icons/Fon1.png'}}}
+IconsList = {True: {'Enemy': 'Icons/EnemyKolobok.png', 'BG': 'Icons/PolKolobok.png', 'Platform': 'Icons/platformKolobok.png', 'Lazer': 'lazerKolobok', 'BB': 'Icons/fonKolobok.png', 'Pers': 'Icons/kolobok.png'},
+             False: {'Pers': ['Icons/person1.png', 'Icons/person2.png', 'Icons/person3.png', 'Icons/person4.png', 'Icons/person5.png'], 'Enemy': 'Icons/enemy.png', 'BG': 'Icons/BackGround.png', 'Platform': 'Icons/platform.png', 'Lazer': 'lazer', 'BB': {'Легкая сложность': 'Icons/BBackground.png', 'Нормальная сложность': 'Icons/fon2.png', 'Сложная сложность': 'Icons/fon3.png', 'Non real': 'Icons/Fon1.png'}}}
 input_rect = pygame.Rect(200, 200, 140, 32)
 color_active = pygame.Color('lightskyblue3')
 color_passive = pygame.Color('chartreuse4')
@@ -181,6 +181,7 @@ while running:
                             NowColor = KolobokColor
                         else:
                             NowColor = TrueBlack
+                        selected_option = ''
 
                 if not isPlay and not isPlayClick:
                     if play_button.is_over(pos) and name != '':
@@ -246,7 +247,6 @@ while running:
     if isPlay and not pause and name != '':
         if person.rect.x >= 0:
             EndGame = False
-            pygame.mixer.music.unpause()
             is_is_PlatformCollide = False
             for i in platformss:
                 if pygame.sprite.collide_mask(person, i):
@@ -254,8 +254,9 @@ while running:
                     is_is_PlatformCollide = True
 
             if is_Jump:
-                person.image = load_image('Icons/personJump.png')
-                person.image = pygame.transform.scale(person.image, (50, 64))
+                if not isKolobok:
+                    person.image = load_image('Icons/personJump.png')
+                    person.image = pygame.transform.scale(person.image, (50, 64))
                 if Jump_count > 0:
                     person.rect.y -= (Jump_count ** 2) / 2
                     Jump_count -= 1
@@ -369,6 +370,7 @@ while running:
             if pygame.sprite.collide_mask(door.MasterCard, person):
                 door.MasterCard.Collid = True
                 door.MasterCard.DieFlag = True
+                door.MasterCard.rect.x = randint(2000, 2500)
             if pygame.sprite.collide_mask(door, person) and door.AnimCount < 40:
                 person.rect.x -= 100
                 door.Die()
@@ -397,15 +399,11 @@ while running:
             EndGame = True
             flag_game_over += 1
             RemakeBTN.draw(screen, WHITE)
-            pygame.mixer.music.pause()
-            pygame.mixer.music.rewind()
             if flag_game_over == 1:
                 cur = sqlite.cursor()
                 res = f'INSERT INTO result (name, score) VALUES("{name}", {money + score + (options.index(selected_option) * 10)})'
                 cur.execute(res)
                 sqlite.commit()
                 cur.close()
-    else:
-        pygame.mixer.music.pause()
 
 pygame.quit()

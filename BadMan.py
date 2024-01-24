@@ -38,7 +38,7 @@ class Bullet(Mov, pygame.sprite.Sprite):
         lazerSound.play()
 
     def Moving(self):
-        self.rect.x -= self.speed + 10
+        self.rect.x -= self.speed + 5
         if self.typeBullet == 'Arrow':
             self.rect.y += self.coef
         self.coef += 0.25
@@ -135,7 +135,8 @@ class Enemy(Mov, pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.x = randint(1000, 2000)
         self.y = 273
-        self.bul = Bullet('lazer', self.x, self.y + 25, screen, sel)
+        self.BULL = bulIcon
+        self.bul = Bullet(bulIcon, self.x, self.y + 25, screen, sel)
         self.bul.isAlive = False
         self.rect = Rect(self.x, self.y, 42, 64)
         self.selected_option = sel
@@ -164,7 +165,7 @@ class Enemy(Mov, pygame.sprite.Sprite):
             self.Time = 0
 
     def Fire(self):
-        self.bul = Bullet('lazer', self.x, self.y + 30, self.screen, self.selected_option)
+        self.bul = Bullet(self.BULL, self.x, self.y + 30, self.screen, self.selected_option)
         self.Time = 0
 
         if self.bul.x <= bul.DiedX:
