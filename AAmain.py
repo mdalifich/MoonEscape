@@ -98,6 +98,8 @@ bb1 = None
 bb2 = None
 bb3 = None
 all_Die_sprites = [enemy, enemy]
+nickFlag = True
+sec = 0
 
 while running:
     if not isPlay and not isPlayClick:
@@ -139,6 +141,14 @@ while running:
         exit_button.draw(screen, WHITE)
         draw_text(screen, f'Введите свой ник:', 350, 10)
         draw_text(screen, name, 450, 45)
+        sec += 1
+        if sec >= 100:
+            if nickFlag:
+                name = name + '_'
+            else:
+                name = name[:-1]
+            nickFlag = not nickFlag
+            sec = 0
     else:
         BackBtn.draw(screen, WHITE)
 
@@ -182,7 +192,7 @@ while running:
                         else:
                             NowColor = TrueBlack
                         selected_option = ''
-
+                        
                 if not isPlay and not isPlayClick:
                     if play_button.is_over(pos) and name != '':
                         clickSound.play()
